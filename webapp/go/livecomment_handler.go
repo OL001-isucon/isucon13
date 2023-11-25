@@ -548,12 +548,14 @@ func moderateHandler(c echo.Context) error {
     }
   }
 
-  query, args, err := sqlx.In("DELETE * FROM livecomments WHERE id IN (?);", forDeletedLivecommentsID)
-  if err != nil {
-    return echo.NewHTTPError(http.StatusInternalServerError, "failed to generate sql by sqlx.In: "+err.Error())
-  }
-  if _, err := tx.ExecContext(ctx, query, args...); err != nil {
-    return echo.NewHTTPError(http.StatusInternalServerError, "failed to delete old livecomments that hit spams: "+err.Error())
+  if len(forDeletedLivecommentsID) > 0 {
+    query, args, err := sqlx.In("DELETE FROM livecomments WHERE id IN (?);", forDeletedLivecommentsID)
+    if err != nil {
+      return echo.NewHTTPError(http.StatusInternalServerError, "failed to generate sql by sqlx.In: "+err.Error())
+    }
+    if _, err := tx.ExecContext(ctx, query, args...); err != nil {
+      return echo.NewHTTPError(http.StatusInternalServerError, "failed to delete old livecomments that hit spams: "+err.Error())
+    }
   }
 
 	if err := tx.Commit(); err != nil {
