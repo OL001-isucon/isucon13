@@ -64,7 +64,7 @@ func getReactionsHandler(c echo.Context) error {
 
 	reactions := []Reaction{}
 	if err := tx.SelectContext(ctx, &reactions, query, livestreamID); err != nil {
-		return echo.NewHTTPError(http.StatusNotFound, "failed to get reactions")
+		return echo.NewHTTPError(http.StatusNotFound, "failed to get reactions" + err.Error())
 	}
 
 	// reactions := make([]Reaction, len(reactionModels))
