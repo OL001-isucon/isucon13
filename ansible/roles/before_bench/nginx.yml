@@ -5,10 +5,10 @@
     dest: /etc/nginx/nginx.conf
     mode: 0644
 
-- name: Copy isucondition.conf
+- name: Copy isupipe.conf
   copy:
-    src: ../../etc/nginx/sites-enabled/isucondition.{{ env }}.conf
-    dest: /etc/nginx/sites-enabled/isucondition.conf
+    src: ../../etc/nginx/sites-enabled/isupipe.{{ env }}.conf
+    dest: /etc/nginx/sites-enabled/isupipe.conf
     mode: 0644
 
 - name: Change file ownership /var/log/nginx/access.log

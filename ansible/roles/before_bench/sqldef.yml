@@ -1,6 +1,6 @@
 ---
 - name: Migrate from sqldef
-  shell: mysqldef -u isucon -p isucon isucondition < schema.sql
+  shell: mysqldef -u isucon -p isucon isupipe < schema.sql
 
 - name: Migrate from trigger
-  shell: mysql -u isucon --password="isucon" isucondition < trigger.sql
+  shell: mysql -u isucon --password="isucon" isupipe < trigger.sql

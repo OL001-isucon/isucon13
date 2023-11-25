@@ -12,11 +12,11 @@
     chdir: /home/isucon/webapp/go
     target: all
     params:
-      DEST: /home/isucon/webapp/go/isucondition
+      DEST: /home/isucon/webapp/go/isupipe
 
 - name: Restart go
   become: true
   service:
-    name: isucondition.go.service
+    name: isupipe.go.service
     state: restarted
     enabled: yes
