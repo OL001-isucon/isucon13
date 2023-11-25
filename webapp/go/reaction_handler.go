@@ -52,15 +52,6 @@ func getReactionsHandler(c echo.Context) error {
 	}
 	defer tx.Rollback()
 
-  // query := "SELECT r.id AS id, r.emoji_name AS emoji_name, r.created_at AS created_at, u.id AS `u.id`, u.name AS `u.name`, u.display_name AS `u.display_name`, u.password AS `u.password`, u.description AS `u.description`, l.id AS `l.id`, l.user_id AS `l.user_id`, l.title AS `l.title`, l.description AS `l.description`, l.playlist_url AS `l.playlist_url`, l.thumbnail_url AS `l.thumbnail_url`, l.start_at AS `l.start_at`, l.end_at AS `l.end_at` FROM reactions as r JOIN users as u ON u.id=r.user_id JOIN livestreams as l ON l.id=r.livestream_id WHERE livestream_id=? ORDER BY r.created_at DESC"
-  // if c.QueryParam("limit") != "" {
-  //   limit, err := strconv.Atoi(c.QueryParam("limit"))
-  //   if err != nil {
-  //     return echo.NewHTTPError(http.StatusBadRequest, "limit query parameter must be integer")
-  //   }
-  //   query += fmt.Sprintf(" LIMIT %d", limit)
-  // }
-
   query := "SELECT * FROM reactions WHERE livestream_id=? ORDER BY created_at DESC"
 	reactionModels := []ReactionModel{}
 	if err := tx.SelectContext(ctx, &reactionModels, query, livestreamID); err != nil {
