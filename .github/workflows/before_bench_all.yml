@@ -23,7 +23,7 @@ jobs:
         with:
           playbook: ./ansible/playbook/before_bench.yml
           options: |
-            -inventory ./ansible/hosts.yml
+            --inventory ./ansible/hosts.yml
             --extra-vars "env=${{ github.event.inputs.env }}"
             --extra-vars "branch=${{ github.ref_name }}"
             --private-key ~/.ssh/id_ed25519
