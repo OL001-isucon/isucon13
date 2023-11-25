@@ -4,6 +4,9 @@
   tasks:
     - name: Git Pull
       import_tasks: ../roles/before_bench/git-pull.yml
+    - name: Initialize env
+      import_tasks: ../roles/before_bench/initialize.yml
+      become: true
     - name: Prepare golang
       import_tasks: ../roles/before_bench/prepare.yml
     - name: Truncate Task
@@ -18,11 +21,11 @@
     - name: Redis Task
       import_tasks: ../roles/before_bench/redis.yml
       become: true
+    - name: Run migrate
+      import_tasks: ../roles/before_bench/sqldef.yml
     - name: Sysctl Task
       import_tasks: ../roles/before_bench/sysctl.yml
       become: true
     - name: Systemd Task
       import_tasks: ../roles/before_bench/systemd.yml
       become: true
-    - name: Run migrate
-      import_tasks: ../roles/before_bench/sqldef.yml
