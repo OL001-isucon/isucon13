@@ -22,7 +22,8 @@ CREATE TABLE `livecomments` (
   `comment` varchar(255) COLLATE utf8mb4_bin NOT NULL,
   `tip` bigint NOT NULL DEFAULT '0',
   `created_at` bigint NOT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `idx_livestream_id_created_at_desc` (`livestream_id`, `created_at` DESC)
 ) ENGINE=InnoDB AUTO_INCREMENT=1002 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 CREATE TABLE `livestream_tags` (
