@@ -15,6 +15,7 @@
 | [reservation_slots](reservation_slots.md) | 4 |  | BASE TABLE |
 | [tags](tags.md) | 2 |  | BASE TABLE |
 | [themes](themes.md) | 3 |  | BASE TABLE |
+| [user_stats](user_stats.md) | 4 |  | BASE TABLE |
 | [users](users.md) | 5 |  | BASE TABLE |
 
 ## Relations
