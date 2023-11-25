@@ -59,6 +59,7 @@ CREATE TABLE `records` (
   `auth` tinyint(1) DEFAULT '1',
   PRIMARY KEY (`id`),
   KEY `domain_id` (`domain_id`),
+  KEY `did_name_dld` (`domain_id`,`name`,`disabled`),
   KEY `ordername` (`ordername`)
 ) ENGINE=InnoDB AUTO_INCREMENT=76341 DEFAULT CHARSET=latin1;
 
