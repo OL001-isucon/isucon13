@@ -658,9 +658,124 @@ func getLivecommentReportsHandler(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get livecomment reports: "+err.Error())
 	}
 
+	reportUserIDs := []int64{}
+	for _, reportModel := range reportModels {
+		reportUserIDs = append(reportUserIDs, reportModel.UserID)
+	}
+
+	reportLivecommentIDs := []int64{}
+	for _, reportModel := range reportModels {
+		reportLivecommentIDs = append(reportLivecommentIDs, reportModel.LivecommentID)
+	}
+
+	// reporter
+	reporterModels := []UserModel{}
+	reporterModelsByUserID := map[int64]UserModel{}
+	if len(reportModels) > 0 {
+		query := "SELECT * FROM users WHERE id IN (?)"
+		query, params, err := sqlx.In(query, reportUserIDs)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to generate sql by sqlx.In: "+err.Error())
+		}
+		if err := tx.SelectContext(ctx, &reporterModels, query, params...); err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to get themes: "+err.Error())
+		}
+		for _, reporterModel := range reporterModels {
+			reporterModelsByUserID[reporterModel.ID] = reporterModel
+		}
+	}
+
+	// reporter theme
+	reporterThemeModels := []ThemeModel{}
+	reporterThemeModelsByUserID := map[int64]ThemeModel{}
+	if len(reportUserIDs) > 0 {
+		query := "SELECT * FROM themes WHERE user_id IN (?)"
+		query, params, err := sqlx.In(query, reportUserIDs)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to generate sql by sqlx.In: "+err.Error())
+		}
+		if err := tx.SelectContext(ctx, &reporterThemeModels, query, params...); err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to get themes: "+err.Error())
+		}
+		for _, reporterThemeModel := range reporterThemeModels {
+			reporterThemeModelsByUserID[reporterThemeModel.UserID] = reporterThemeModel
+		}
+	}
+
+	// livecomment
+	livecommentModels := []LivecommentModel{}
+	livecommentModelsByReportID := map[int64]LivecommentModel{}
+	if len(reportLivecommentIDs) > 0 {
+		query := "SELECT * FROM livecomments WHERE id IN (?)"
+		query, params, err := sqlx.In(query, reportLivecommentIDs)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to generate sql by sqlx.In: "+err.Error())
+		}
+		if err := tx.SelectContext(ctx, &livecommentModels, query, params...); err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to get livecomments: "+err.Error())
+		}
+		for _, livecommentModel := range livecommentModels {
+			livecommentModelsByReportID[livecommentModel.ID] = livecommentModel
+		}
+	}
+
+	// livecomment owner
+	livecommentOwnerUserIDs := []int64{}
+	livecommentOwnerModels := []UserModel{}
+	livecommentOwnerModelsByUserID := map[int64]UserModel{}
+	if len(livecommentModels) > 0 {
+		for _, livecommentModel := range livecommentModels {
+			livecommentOwnerUserIDs = append(livecommentOwnerUserIDs, livecommentModel.UserID)
+		}
+		query := "SELECT * FROM users WHERE id IN (?)"
+		query, params, err := sqlx.In(query, livecommentOwnerUserIDs)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to generate sql by sqlx.In: "+err.Error())
+		}
+		if err := tx.SelectContext(ctx, &livecommentOwnerModels, query, params...); err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to get themes: "+err.Error())
+		}
+		for _, livecommentOwnerModel := range livecommentOwnerModels {
+			livecommentOwnerModelsByUserID[livecommentOwnerModel.ID] = livecommentOwnerModel
+		}
+	}
+
+	// livecomment owner theme
+	livecommentOwnerThemeModels := []ThemeModel{}
+	livecommentOwnerThemeModelsByUserID := map[int64]ThemeModel{}
+	if len(livecommentOwnerUserIDs) > 0 {
+		query := "SELECT * FROM themes WHERE user_id IN (?)"
+		query, params, err := sqlx.In(query, livecommentOwnerUserIDs)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to generate sql by sqlx.In: "+err.Error())
+		}
+		if err := tx.SelectContext(ctx, &livecommentOwnerThemeModels, query, params...); err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to get themes: "+err.Error())
+		}
+		for _, livecommentOwnerThemeModel := range livecommentOwnerThemeModels {
+			livecommentOwnerThemeModelsByUserID[livecommentOwnerThemeModel.UserID] = livecommentOwnerThemeModel
+		}
+	}
+
+	// livestream tags
+	livestreamTags := []TagModel{}
+	query := "SELECT tags.* FROM tags JOIN livestream_tags ON livestream_tags.tag_id = tags.id WHERE livestream_tags.livestream_id = ?"
+	if err := tx.SelectContext(ctx, &livestreamTags, query, livestreamID); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get tags: "+err.Error())
+	}
+
 	reports := make([]LivecommentReport, len(reportModels))
 	for i := range reportModels {
-		report, err := fillLivecommentReportResponse(ctx, tx, *reportModels[i])
+		report, err := fillLivecommentReportResponse_2(
+			*reportModels[i],
+			reporterModelsByUserID[reportModels[i].UserID],
+			reporterThemeModelsByUserID[reportModels[i].UserID],
+			livecommentModelsByReportID[reportModels[i].LivecommentID],
+			livecommentOwnerModelsByUserID[livecommentModelsByReportID[reportModels[i].LivecommentID].UserID],
+			livecommentOwnerThemeModelsByUserID[livecommentModelsByReportID[reportModels[i].LivecommentID].UserID],
+			livestreamModel,
+			livestreamTags,
+		)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to fill livecomment report: "+err.Error())
 		}

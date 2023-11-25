@@ -5,6 +5,41 @@ import (
 	"fmt"
 )
 
+func fillLivecommentReportResponse_2(
+	reportModel LivecommentReportModel,
+	reporterModel UserModel,
+	reporterThemeModel ThemeModel,
+	livecommentModel LivecommentModel,
+	livecommentOwnerModel UserModel,
+	livecommentOwnerThemeModel ThemeModel,
+	livestreamModel LivestreamModel,
+	tagModels []TagModel,
+) (LivecommentReport, error) {
+	reporter, err := fillUserResponse_2(reporterModel, reporterThemeModel)
+	if err != nil {
+		return LivecommentReport{}, err
+	}
+
+	livecomment, err := fillLivecommentResponse_2(
+		livecommentOwnerModel,
+		livecommentOwnerThemeModel,
+		livestreamModel,
+		livecommentModel,
+		tagModels,
+	)
+	if err != nil {
+		return LivecommentReport{}, err
+	}
+
+	report := LivecommentReport{
+		ID:          reportModel.ID,
+		Reporter:    reporter,
+		Livecomment: livecomment,
+		CreatedAt:   reportModel.CreatedAt,
+	}
+	return report, nil
+}
+
 func fillLivecommentResponse_2(commentOwnerModel UserModel, themeModel ThemeModel, livestreamModel LivestreamModel, livecommentModel LivecommentModel, tagModels []TagModel) (Livecomment, error) {
 	commentOwner, err := fillUserResponse_2(commentOwnerModel, themeModel)
 	if err != nil {
