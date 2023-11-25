@@ -15,7 +15,8 @@ CREATE TABLE `livestreams` (
   `thumbnail_url` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
   `start_at` bigint NOT NULL,
   `end_at` bigint NOT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `idx_id_user_id` (`id`,`user_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=[Redacted by tbls] DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin
 ```
 
@@ -44,6 +45,7 @@ CREATE TABLE `livestreams` (
 
 | Name | Definition |
 | ---- | ---------- |
+| idx_id_user_id | KEY idx_id_user_id (id, user_id) USING BTREE |
 | PRIMARY | PRIMARY KEY (id) USING BTREE |
 
 ## Relations
