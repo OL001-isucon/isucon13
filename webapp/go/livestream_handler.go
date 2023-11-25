@@ -290,8 +290,8 @@ func searchLivestreamsHandler(c echo.Context) error {
 		livestream, err := fillLivestreamResponse_2(
 			*livestreamModel,
 			ownerModelsByUserID[livestreamModel.UserID],
-			tagModelsByLivestreamID[livestreamModel.ID],
 			themeModelsByUserID[livestreamModel.UserID],
+			tagModelsByLivestreamID[livestreamModel.ID],
 		)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to fill livestream: "+err.Error())
@@ -335,37 +335,17 @@ func getMyLivestreamsHandler(c echo.Context) error {
 	}
 
 	// owner
-	ownerModels := []UserModel{}
-	ownerModelsByUserID := map[int64]UserModel{}
-	if len(livestreamModels) > 0 {
-		query := "SELECT * FROM users WHERE id IN (?)"
-		query, params, err := sqlx.In(query, livestreamIDs)
-		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, "failed to generate sql by sqlx.In: "+err.Error())
-		}
-		if err := tx.SelectContext(ctx, &ownerModels, query, params...); err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, "failed to get themes: "+err.Error())
-		}
-		for _, ownerModel := range ownerModels {
-			ownerModelsByUserID[ownerModel.ID] = ownerModel
-		}
+	ownerModel := UserModel{}
+	query := "SELECT * FROM users WHERE id = ?"
+	if err := tx.GetContext(ctx, &ownerModel, query, userID); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get themes: "+err.Error())
 	}
 
 	// theme
-	themeModels := []ThemeModel{}
-	themeModelsByUserID := map[int64]ThemeModel{}
-	if len(livestreamIDs) > 0 {
-		query := "SELECT * FROM themes WHERE user_id IN (?)"
-		query, params, err := sqlx.In(query, livestreamIDs)
-		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, "failed to generate sql by sqlx.In: "+err.Error())
-		}
-		if err := tx.SelectContext(ctx, &themeModels, query, params...); err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, "failed to get themes: "+err.Error())
-		}
-		for _, themeModel := range themeModels {
-			themeModelsByUserID[themeModel.UserID] = themeModel
-		}
+	themeModel := ThemeModel{}
+	query = "SELECT * FROM themes WHERE user_id = ?"
+	if err := tx.GetContext(ctx, &themeModel, query, userID); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get themes: "+err.Error())
 	}
 
 	// tag
@@ -388,9 +368,9 @@ func getMyLivestreamsHandler(c echo.Context) error {
 	for i := range livestreamModels {
 		livestream, err := fillLivestreamResponse_2(
 			*livestreamModels[i],
-			ownerModelsByUserID[livestreamModels[i].UserID],
+			ownerModel,
+			themeModel,
 			tagModelsByLivestreamID[livestreamModels[i].ID],
-			themeModelsByUserID[livestreamModels[i].UserID],
 		)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to fill livestream: "+err.Error())
@@ -441,7 +421,7 @@ func getUserLivestreamsHandler(c echo.Context) error {
 
 	// owner
 	ownerModels := []UserModel{}
-	ownerModelsByUserID := map[int64]UserModel{}
+	livestreamOwnerModelsByUserID := map[int64]UserModel{}
 	if len(livestreamModels) > 0 {
 		query := "SELECT * FROM users WHERE id IN (?)"
 		query, params, err := sqlx.In(query, livestreamIDs)
@@ -452,13 +432,13 @@ func getUserLivestreamsHandler(c echo.Context) error {
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to get themes: "+err.Error())
 		}
 		for _, ownerModel := range ownerModels {
-			ownerModelsByUserID[ownerModel.ID] = ownerModel
+			livestreamOwnerModelsByUserID[ownerModel.ID] = ownerModel
 		}
 	}
 
 	// theme
 	themeModels := []ThemeModel{}
-	themeModelsByUserID := map[int64]ThemeModel{}
+	livestreamOwnerThemeModelsByUserID := map[int64]ThemeModel{}
 	if len(livestreamIDs) > 0 {
 		query := "SELECT * FROM themes WHERE user_id IN (?)"
 		query, params, err := sqlx.In(query, livestreamIDs)
@@ -469,7 +449,7 @@ func getUserLivestreamsHandler(c echo.Context) error {
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to get themes: "+err.Error())
 		}
 		for _, themeModel := range themeModels {
-			themeModelsByUserID[themeModel.UserID] = themeModel
+			livestreamOwnerThemeModelsByUserID[themeModel.UserID] = themeModel
 		}
 	}
 
@@ -493,9 +473,9 @@ func getUserLivestreamsHandler(c echo.Context) error {
 	for i := range livestreamModels {
 		livestream, err := fillLivestreamResponse_2(
 			*livestreamModels[i],
-			ownerModelsByUserID[livestreamModels[i].UserID],
+			livestreamOwnerModelsByUserID[livestreamModels[i].UserID],
+			livestreamOwnerThemeModelsByUserID[livestreamModels[i].UserID],
 			tagModelsByLivestreamID[livestreamModels[i].ID],
-			themeModelsByUserID[livestreamModels[i].UserID],
 		)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to fill livestream: "+err.Error())
@@ -760,6 +740,15 @@ func getLivecommentReportsHandler(c echo.Context) error {
 		}
 	}
 
+	livestreamOwnerModel := UserModel{}
+	if err := tx.GetContext(ctx, &livestreamOwnerModel, "SELECT * FROM users WHERE id = ?", livestreamModel.UserID); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get livestream owner: "+err.Error())
+	}
+	livestreamOwnerThemeModel := ThemeModel{}
+	if err := tx.GetContext(ctx, &livestreamOwnerThemeModel, "SELECT * FROM themes WHERE user_id = ?", livestreamModel.UserID); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get livestream owner theme: "+err.Error())
+	}
+
 	// livestream tags
 	livestreamTags := []TagModel{}
 	query := "SELECT tags.* FROM tags JOIN livestream_tags ON livestream_tags.tag_id = tags.id WHERE livestream_tags.livestream_id = ?"
@@ -777,6 +766,8 @@ func getLivecommentReportsHandler(c echo.Context) error {
 			livecommentOwnerModelsByUserID[livecommentModelsByReportID[reportModels[i].LivecommentID].UserID],
 			livecommentOwnerThemeModelsByUserID[livecommentModelsByReportID[reportModels[i].LivecommentID].UserID],
 			livestreamModel,
+			livestreamOwnerModel,
+			livestreamOwnerThemeModel,
 			livestreamTags,
 		)
 		if err != nil {

@@ -112,10 +112,10 @@ func getLivecommentsHandler(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get livecomments: "+err.Error())
 	}
 
-	// comment user
+	// livecomment user
 	commentUserIDs := []int64{}
 	commentUserModels := []UserModel{}
-	commentUserModelsByCommentID := map[int64]UserModel{}
+	livecommentUserModelsByCommentID := map[int64]UserModel{}
 	for _, livecommentModel := range livecommentModels {
 		commentUserIDs = append(commentUserIDs, livecommentModel.UserID)
 	}
@@ -129,13 +129,22 @@ func getLivecommentsHandler(c echo.Context) error {
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to get comment users: "+err.Error())
 		}
 		for _, commentUserModel := range commentUserModels {
-			commentUserModelsByCommentID[commentUserModel.ID] = commentUserModel
+			livecommentUserModelsByCommentID[commentUserModel.ID] = commentUserModel
 		}
+	}
+
+	livestreamOwnerModel := UserModel{}
+	if err := tx.GetContext(ctx, &livestreamOwnerModel, "SELECT * FROM users WHERE id = ?", livestreamModel.UserID); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get livestream owner: "+err.Error())
+	}
+	livestreamOwnerThemeModel := ThemeModel{}
+	if err := tx.GetContext(ctx, &livestreamOwnerThemeModel, "SELECT * FROM themes WHERE user_id = ?", livestreamModel.UserID); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get livestream owner theme: "+err.Error())
 	}
 
 	// theme
 	themeModels := []ThemeModel{}
-	themeModelsByUserID := map[int64]ThemeModel{}
+	livecommentUserThemeModelsByUserID := map[int64]ThemeModel{}
 	if len(commentUserIDs) > 0 {
 		query = "SELECT * FROM themes WHERE user_id IN (?)"
 		query, params, err := sqlx.In(query, commentUserIDs)
@@ -146,7 +155,7 @@ func getLivecommentsHandler(c echo.Context) error {
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to get themes: "+err.Error())
 		}
 		for _, themeModel := range themeModels {
-			themeModelsByUserID[themeModel.UserID] = themeModel
+			livecommentUserThemeModelsByUserID[themeModel.UserID] = themeModel
 		}
 	}
 
@@ -159,10 +168,12 @@ func getLivecommentsHandler(c echo.Context) error {
 	livecomments := make([]Livecomment, len(livecommentModels))
 	for i, livecommentModel := range livecommentModels {
 		livecomment, err := fillLivecommentResponse_2(
-			commentUserModelsByCommentID[livecommentModel.UserID],
-			themeModelsByUserID[livecommentModel.UserID],
-			livestreamModel,
 			livecommentModel,
+			livecommentUserModelsByCommentID[livecommentModel.UserID],
+			livecommentUserThemeModelsByUserID[livecommentModel.UserID],
+			livestreamModel,
+			livestreamOwnerModel,
+			livestreamOwnerThemeModel,
 			tagModels,
 		)
 		if err != nil {
@@ -301,12 +312,12 @@ func postLivecommentHandler(c echo.Context) error {
 	}
 	livecommentModel.ID = livecommentID
 
-	commentOwnerModel := UserModel{}
-	if err := tx.GetContext(ctx, &commentOwnerModel, "SELECT * FROM users WHERE id = ?", livecommentModel.UserID); err != nil {
+	livecommentOwnerModel := UserModel{}
+	if err := tx.GetContext(ctx, &livecommentOwnerModel, "SELECT * FROM users WHERE id = ?", livecommentModel.UserID); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get comment owner: "+err.Error())
 	}
-	commentOwnerThemeModel := ThemeModel{}
-	if err := tx.GetContext(ctx, &commentOwnerThemeModel, "SELECT * FROM themes WHERE user_id = ?", livecommentModel.UserID); err != nil {
+	livecommentOwnerThemeModel := ThemeModel{}
+	if err := tx.GetContext(ctx, &livecommentOwnerThemeModel, "SELECT * FROM themes WHERE user_id = ?", livecommentModel.UserID); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get comment owner theme: "+err.Error())
 	}
 	tagModels := []TagModel{}
@@ -314,11 +325,22 @@ func postLivecommentHandler(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get tags: "+err.Error())
 	}
 
+	livestreamOwnerModel := UserModel{}
+	if err := tx.GetContext(ctx, &livestreamOwnerModel, "SELECT * FROM users WHERE id = ?", livestreamModel.UserID); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get livestream owner: "+err.Error())
+	}
+	livestreamOwnerThemeModel := ThemeModel{}
+	if err := tx.GetContext(ctx, &livestreamOwnerThemeModel, "SELECT * FROM themes WHERE user_id = ?", livestreamModel.UserID); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get livestream owner theme: "+err.Error())
+	}
+
 	livecomment, err := fillLivecommentResponse_2(
-		commentOwnerModel,
-		commentOwnerThemeModel,
-		livestreamModel,
 		livecommentModel,
+		livecommentOwnerModel,
+		livecommentOwnerThemeModel,
+		livestreamModel,
+		livestreamOwnerModel,
+		livestreamOwnerThemeModel,
 		tagModels,
 	)
 	if err != nil {
@@ -411,6 +433,14 @@ func reportLivecommentHandler(c echo.Context) error {
 	if err := tx.GetContext(ctx, &livecommentOwnerThemeModel, "SELECT * FROM themes WHERE user_id = ?", livecommentModel.UserID); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get livecomment owner theme: "+err.Error())
 	}
+	livestreamOwnerModel := UserModel{}
+	if err := tx.GetContext(ctx, &livestreamOwnerModel, "SELECT * FROM users WHERE id = ?", livestreamModel.UserID); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get livestream owner: "+err.Error())
+	}
+	livestreamOwnerThemeModel := ThemeModel{}
+	if err := tx.GetContext(ctx, &livestreamOwnerThemeModel, "SELECT * FROM themes WHERE user_id = ?", livestreamModel.UserID); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get livestream owner theme: "+err.Error())
+	}
 	tagModels := []TagModel{}
 	if err := tx.SelectContext(ctx, &tagModels, "SELECT tags.* FROM tags JOIN livestream_tags ON livestream_tags.tag_id = tags.id WHERE livestream_tags.livestream_id = ?", livestreamModel.ID); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get tags: "+err.Error())
@@ -424,6 +454,8 @@ func reportLivecommentHandler(c echo.Context) error {
 		livecommentOwnerModel,
 		livecommentOwnerThemeModel,
 		livestreamModel,
+		livestreamOwnerModel,
+		livestreamOwnerThemeModel,
 		tagModels,
 	)
 	if err != nil {

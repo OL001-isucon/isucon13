@@ -13,6 +13,8 @@ func fillLivecommentReportResponse_2(
 	livecommentOwnerModel UserModel,
 	livecommentOwnerThemeModel ThemeModel,
 	livestreamModel LivestreamModel,
+	livestreamOwnerModel UserModel,
+	livestreamOwnerThemeModel ThemeModel,
 	tagModels []TagModel,
 ) (LivecommentReport, error) {
 	reporter, err := fillUserResponse_2(reporterModel, reporterThemeModel)
@@ -21,10 +23,12 @@ func fillLivecommentReportResponse_2(
 	}
 
 	livecomment, err := fillLivecommentResponse_2(
+		livecommentModel,
 		livecommentOwnerModel,
 		livecommentOwnerThemeModel,
 		livestreamModel,
-		livecommentModel,
+		livestreamOwnerModel,
+		livestreamOwnerThemeModel,
 		tagModels,
 	)
 	if err != nil {
@@ -40,13 +44,21 @@ func fillLivecommentReportResponse_2(
 	return report, nil
 }
 
-func fillLivecommentResponse_2(commentOwnerModel UserModel, themeModel ThemeModel, livestreamModel LivestreamModel, livecommentModel LivecommentModel, tagModels []TagModel) (Livecomment, error) {
-	commentOwner, err := fillUserResponse_2(commentOwnerModel, themeModel)
+func fillLivecommentResponse_2(
+	livecommentModel LivecommentModel,
+	livecommentOwnerModel UserModel,
+	livecommentOwnerThemeModel ThemeModel,
+	livestreamModel LivestreamModel,
+	livestreamOwnerModel UserModel,
+	livestreamOwnerThemeModel ThemeModel,
+	tagModels []TagModel,
+) (Livecomment, error) {
+	commentOwner, err := fillUserResponse_2(livecommentOwnerModel, livecommentOwnerThemeModel)
 	if err != nil {
 		return Livecomment{}, err
 	}
 
-	livestream, err := fillLivestreamResponse_2(livestreamModel, commentOwnerModel, tagModels, themeModel)
+	livestream, err := fillLivestreamResponse_2(livestreamModel, livestreamOwnerModel, livestreamOwnerThemeModel, tagModels)
 	if err != nil {
 		return Livecomment{}, err
 	}
@@ -63,7 +75,7 @@ func fillLivecommentResponse_2(commentOwnerModel UserModel, themeModel ThemeMode
 	return livecomment, nil
 }
 
-func fillLivestreamResponse_2(livestreamModel LivestreamModel, ownerModel UserModel, tagModels []TagModel, themeModel ThemeModel) (Livestream, error) {
+func fillLivestreamResponse_2(livestreamModel LivestreamModel, livestreamOwnerModel UserModel, livestreamOwnerThemeModel ThemeModel, tagModels []TagModel) (Livestream, error) {
 	tags := make([]Tag, len(tagModels))
 	for i, tagModel := range tagModels {
 		tags[i] = Tag{
@@ -72,7 +84,7 @@ func fillLivestreamResponse_2(livestreamModel LivestreamModel, ownerModel UserMo
 		}
 	}
 
-	owner, err := fillUserResponse_2(ownerModel, themeModel)
+	owner, err := fillUserResponse_2(livestreamOwnerModel, livestreamOwnerThemeModel)
 	if err != nil {
 		return Livestream{}, err
 	}
