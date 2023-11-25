@@ -19,10 +19,17 @@ local:
 ```console
 $ scp isucon@isucon-3:/home/isucon/dump.sql ./dump.sql
 $ mysqldef -u isucon -p isucon isupipe < schema.sql
-$ mysql --user isucon --password="isucon" isupipe < ./dump.sql
-
+$ mysql --host 127.0.0.1 --port 3306 --user isucon --password="isucon" isupipe < ./dump.sql
 ```
 
+go build and run:
+
+```console
+$ cp .env.sh.de .env.sh
+$ cd webapp/go
+$ make darwin
+$ env ISUCON13_POWERDNS_SUBDOMAIN_ADDRESS=13.113.224.90 ISUCON13_POWERDNS_DISABLED=false ./isupipe_darwin
+```
 
 ## neofetch
 
