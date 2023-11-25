@@ -529,11 +529,6 @@ func moderateHandler(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get last inserted NG word id: "+err.Error())
 	}
 
-  var ngword NGWord
-  if err := tx.GetContext(ctx, &ngword, "SELECT * FROM ng_words WHERE id = ?", wordID); err != nil {
-    return echo.NewHTTPError(http.StatusInternalServerError, "failed to get NG word: "+err.Error())
-  }
-
   // ライブコメント一覧取得
   var livecomments []*LivecommentModel
   if err := tx.SelectContext(ctx, &livecomments, "SELECT * FROM livecomments WHERE livestream_id=?", livestreamID); err != nil {
@@ -543,17 +538,19 @@ func moderateHandler(c echo.Context) error {
   var forDeletedLivecommentsID []int64
 
   for _, livecomment := range livecomments {
-    if (strings.Contains(livecomment.Comment, ngword.Word)) {
+    if (strings.Contains(livecomment.Comment, req.NGWord)) {
       forDeletedLivecommentsID = append(forDeletedLivecommentsID, livecomment.ID)
     }
   }
 
-  query, args, err := sqlx.In("DELETE * FROM livecomments WHERE id IN (?);", forDeletedLivecommentsID)
-  if err != nil {
-    return echo.NewHTTPError(http.StatusInternalServerError, "failed to generate sql by sqlx.In: "+err.Error())
-  }
-  if _, err := tx.ExecContext(ctx, query, args...); err != nil {
-    return echo.NewHTTPError(http.StatusInternalServerError, "failed to delete old livecomments that hit spams: "+err.Error())
+  if len(forDeletedLivecommentsID) > 0 {
+    query, args, err := sqlx.In("DELETE FROM livecomments WHERE id IN (?)", forDeletedLivecommentsID)
+    if err != nil {
+      return echo.NewHTTPError(http.StatusInternalServerError, "failed to generate sql by sqlx.In: "+err.Error())
+    }
+    if _, err := tx.ExecContext(ctx, query, args...); err != nil {
+      return echo.NewHTTPError(http.StatusInternalServerError, "failed to delete old livecomments that hit spams: "+err.Error())
+    }
   }
 
 	if err := tx.Commit(); err != nil {
