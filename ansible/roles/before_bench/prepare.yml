@@ -5,12 +5,21 @@
     dest: /home/isucon/env.sh
     mode: 0755
 
-- name: Clean && Build go
+- name: Build go
   environment:
     PATH: /home/isucon/local/golang/bin:{{ ansible_env.PATH }}
   make:
     chdir: /home/isucon/webapp/go
-    target: all
+    target: clean
+    params:
+      DEST: /home/isucon/webapp/go/isupipe
+
+- name: Build go
+  environment:
+    PATH: /home/isucon/local/golang/bin:{{ ansible_env.PATH }}
+  make:
+    chdir: /home/isucon/webapp/go
+    target: build
     params:
       DEST: /home/isucon/webapp/go/isupipe
 
