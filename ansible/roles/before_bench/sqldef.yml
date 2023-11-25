@@ -5,5 +5,5 @@
 - name: Migrate from sqldef
   shell: mysqldef -u isucon -p isucon isupipe < schema.sql
 
-- name: Migrate down from trigger
+- name: Migrate up from trigger
   shell: mysql -u isucon --password="isucon" isupipe < trigger_up.sql
