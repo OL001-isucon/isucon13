@@ -301,7 +301,26 @@ func postLivecommentHandler(c echo.Context) error {
 	}
 	livecommentModel.ID = livecommentID
 
-	livecomment, err := fillLivecommentResponse(ctx, tx, livecommentModel)
+	commentOwnerModel := UserModel{}
+	if err := tx.GetContext(ctx, &commentOwnerModel, "SELECT * FROM users WHERE id = ?", livecommentModel.UserID); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get comment owner: "+err.Error())
+	}
+	commentOwnerThemeModel := ThemeModel{}
+	if err := tx.GetContext(ctx, &commentOwnerThemeModel, "SELECT * FROM themes WHERE user_id = ?", livecommentModel.UserID); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get comment owner theme: "+err.Error())
+	}
+	tagModels := []TagModel{}
+	if err := tx.SelectContext(ctx, &tagModels, "SELECT tags.* FROM tags JOIN livestream_tags ON livestream_tags.tag_id = tags.id WHERE livestream_tags.livestream_id = ?", livestreamModel.ID); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get tags: "+err.Error())
+	}
+
+	livecomment, err := fillLivecommentResponse_2(
+		commentOwnerModel,
+		commentOwnerThemeModel,
+		livestreamModel,
+		livecommentModel,
+		tagModels,
+	)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to fill livecomment: "+err.Error())
 	}
@@ -543,30 +562,30 @@ func fillLivecommentResponse(ctx context.Context, tx *sqlx.Tx, livecommentModel 
 	return livecomment, nil
 }
 
-func fillLivecommentReportResponse(ctx context.Context, tx *sqlx.Tx, reportModel LivecommentReportModel) (LivecommentReport, error) {
-	reporterModel := UserModel{}
-	if err := tx.GetContext(ctx, &reporterModel, "SELECT * FROM users WHERE id = ?", reportModel.UserID); err != nil {
-		return LivecommentReport{}, err
-	}
-	reporter, err := fillUserResponse(ctx, tx, reporterModel)
-	if err != nil {
-		return LivecommentReport{}, err
-	}
+// func fillLivecommentReportResponse(ctx context.Context, tx *sqlx.Tx, reportModel LivecommentReportModel) (LivecommentReport, error) {
+// 	reporterModel := UserModel{}
+// 	if err := tx.GetContext(ctx, &reporterModel, "SELECT * FROM users WHERE id = ?", reportModel.UserID); err != nil {
+// 		return LivecommentReport{}, err
+// 	}
+// 	reporter, err := fillUserResponse(ctx, tx, reporterModel)
+// 	if err != nil {
+// 		return LivecommentReport{}, err
+// 	}
 
-	livecommentModel := LivecommentModel{}
-	if err := tx.GetContext(ctx, &livecommentModel, "SELECT * FROM livecomments WHERE id = ?", reportModel.LivecommentID); err != nil {
-		return LivecommentReport{}, err
-	}
-	livecomment, err := fillLivecommentResponse(ctx, tx, livecommentModel)
-	if err != nil {
-		return LivecommentReport{}, err
-	}
+// 	livecommentModel := LivecommentModel{}
+// 	if err := tx.GetContext(ctx, &livecommentModel, "SELECT * FROM livecomments WHERE id = ?", reportModel.LivecommentID); err != nil {
+// 		return LivecommentReport{}, err
+// 	}
+// 	livecomment, err := fillLivecommentResponse(ctx, tx, livecommentModel)
+// 	if err != nil {
+// 		return LivecommentReport{}, err
+// 	}
 
-	report := LivecommentReport{
-		ID:          reportModel.ID,
-		Reporter:    reporter,
-		Livecomment: livecomment,
-		CreatedAt:   reportModel.CreatedAt,
-	}
-	return report, nil
-}
+// 	report := LivecommentReport{
+// 		ID:          reportModel.ID,
+// 		Reporter:    reporter,
+// 		Livecomment: livecomment,
+// 		CreatedAt:   reportModel.CreatedAt,
+// 	}
+// 	return report, nil
+// }
