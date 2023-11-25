@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -563,36 +562,36 @@ func moderateHandler(c echo.Context) error {
 	})
 }
 
-func fillLivecommentResponse(ctx context.Context, tx *sqlx.Tx, livecommentModel LivecommentModel) (Livecomment, error) {
-	commentOwnerModel := UserModel{}
-	if err := tx.GetContext(ctx, &commentOwnerModel, "SELECT * FROM users WHERE id = ?", livecommentModel.UserID); err != nil {
-		return Livecomment{}, err
-	}
-	commentOwner, err := fillUserResponse(ctx, tx, commentOwnerModel)
-	if err != nil {
-		return Livecomment{}, err
-	}
+// func fillLivecommentResponse(ctx context.Context, tx *sqlx.Tx, livecommentModel LivecommentModel) (Livecomment, error) {
+// 	commentOwnerModel := UserModel{}
+// 	if err := tx.GetContext(ctx, &commentOwnerModel, "SELECT * FROM users WHERE id = ?", livecommentModel.UserID); err != nil {
+// 		return Livecomment{}, err
+// 	}
+// 	commentOwner, err := fillUserResponse(ctx, tx, commentOwnerModel)
+// 	if err != nil {
+// 		return Livecomment{}, err
+// 	}
 
-	livestreamModel := LivestreamModel{}
-	if err := tx.GetContext(ctx, &livestreamModel, "SELECT * FROM livestreams WHERE id = ?", livecommentModel.LivestreamID); err != nil {
-		return Livecomment{}, err
-	}
-	livestream, err := fillLivestreamResponse(ctx, tx, livestreamModel)
-	if err != nil {
-		return Livecomment{}, err
-	}
+// 	livestreamModel := LivestreamModel{}
+// 	if err := tx.GetContext(ctx, &livestreamModel, "SELECT * FROM livestreams WHERE id = ?", livecommentModel.LivestreamID); err != nil {
+// 		return Livecomment{}, err
+// 	}
+// 	livestream, err := fillLivestreamResponse(ctx, tx, livestreamModel)
+// 	if err != nil {
+// 		return Livecomment{}, err
+// 	}
 
-	livecomment := Livecomment{
-		ID:         livecommentModel.ID,
-		User:       commentOwner,
-		Livestream: livestream,
-		Comment:    livecommentModel.Comment,
-		Tip:        livecommentModel.Tip,
-		CreatedAt:  livecommentModel.CreatedAt,
-	}
+// 	livecomment := Livecomment{
+// 		ID:         livecommentModel.ID,
+// 		User:       commentOwner,
+// 		Livestream: livestream,
+// 		Comment:    livecommentModel.Comment,
+// 		Tip:        livecommentModel.Tip,
+// 		CreatedAt:  livecommentModel.CreatedAt,
+// 	}
 
-	return livecomment, nil
-}
+// 	return livecomment, nil
+// }
 
 // func fillLivecommentReportResponse(ctx context.Context, tx *sqlx.Tx, reportModel LivecommentReportModel) (LivecommentReport, error) {
 // 	reporterModel := UserModel{}
