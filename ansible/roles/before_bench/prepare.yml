@@ -7,7 +7,7 @@
 
 - name: Clean && Build go
   environment:
-    PATH: /home/isucon/local/go/bin:{{ ansible_env.PATH }}
+    PATH: /home/isucon/local/golang/bin:{{ ansible_env.PATH }}
   make:
     chdir: /home/isucon/webapp/go
     target: all
