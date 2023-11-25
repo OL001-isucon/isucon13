@@ -26,3 +26,6 @@
     - name: Systemd Task
       import_tasks: ../roles/before_bench/systemd.yml
       become: true
+    - name: Initialize pdns
+      import_tasks: ../roles/before_bench/initialize_pdns.yml
+      become: true
