@@ -1,9 +1,9 @@
 ---
-- name: Prepare env
-  copy:
-    src: ../../../env.sh.{{ env }}
-    dest: /home/isucon/env.sh
-    mode: 0755
+# - name: Prepare env
+#   copy:
+#     src: ../../../env.sh.{{ env }}
+#     dest: /home/isucon/env.sh
+#     mode: 0755
 
 - name: Build go
   environment:
