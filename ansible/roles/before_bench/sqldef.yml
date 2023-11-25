@@ -6,7 +6,7 @@
   shell: mysqldef -u isucon -p isucon isupipe < schema.sql
 
 - name: Migrate from sqldef(isudns)
-  shell: mysqldef -u isucon -p isucon isudns < schema.sql
+  shell: mysqldef -u isucon -p isucon isudns < schema_dns.sql
 
 - name: Migrate up from trigger
   shell: mysql -u isucon --password="isucon" isupipe < trigger_up.sql
