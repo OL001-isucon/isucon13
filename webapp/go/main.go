@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"strconv"
+	"time"
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
@@ -98,7 +99,10 @@ func connectDB(logger echo.Logger) (*sqlx.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-	db.SetMaxOpenConns(10)
+	db.SetMaxOpenConns(50)
+	db.SetMaxIdleConns(50 * 2)
+	db.SetConnMaxLifetime(5 * time.Minute)
+	db.SetConnMaxIdleTime(2 * time.Minute)
 
 	if err := db.Ping(); err != nil {
 		return nil, err
@@ -113,7 +117,7 @@ func initializeHandler(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to initialize: "+err.Error())
 	}
 
-  if out, err := exec.Command("./purge_image.sh").CombinedOutput(); err != nil {
+	if out, err := exec.Command("./purge_image.sh").CombinedOutput(); err != nil {
 		c.Logger().Warnf("purge_image.sh failed with err=%s", string(out))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to initialize: "+err.Error())
 	}
