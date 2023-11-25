@@ -7,10 +7,20 @@ docker-compose:
 $ docker compose up
 ```
 
-DBを落とす
+server:
 
 ```console
-$
+$ ssh isucon-3
+$ mysqldump --user isucon --password="isucon" -t isupipe > dump.sql
+```
+
+local:
+
+```console
+$ scp isucon@isucon-3:/home/isucon/dump.sql ./dump.sql
+$ mysqldef -u isucon -p isucon isupipe < schema.sql
+$ mysql --user isucon --password="isucon" isupipe < ./dump.sql
+
 ```
 
 
