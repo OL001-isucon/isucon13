@@ -273,23 +273,30 @@ func postLivecommentHandler(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get NG words: "+err.Error())
 	}
 
-	var hitSpam int
-	for _, ngword := range ngwords {
-		query := `
-		SELECT COUNT(*)
-		FROM
-		(SELECT ? AS text) AS texts
-		INNER JOIN
-		(SELECT CONCAT('%', ?, '%')	AS pattern) AS patterns
-		ON texts.text LIKE patterns.pattern;
-		`
-		if err := tx.GetContext(ctx, &hitSpam, query, req.Comment, ngword.Word); err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, "failed to get hitspam: "+err.Error())
-		}
-		c.Logger().Infof("[hitSpam=%d] comment = %s", hitSpam, req.Comment)
-		if hitSpam >= 1 {
-			return echo.NewHTTPError(http.StatusBadRequest, "このコメントがスパム判定されました")
-		}
+	// var hitSpam int
+	// for _, ngword := range ngwords {
+	// 	query := `
+	// 	SELECT COUNT(*)
+	// 	FROM
+	// 	(SELECT ? AS text) AS texts
+	// 	INNER JOIN
+	// 	(SELECT CONCAT('%', ?, '%')	AS pattern) AS patterns
+	// 	ON texts.text LIKE patterns.pattern;
+	// 	`
+	// 	if err := tx.GetContext(ctx, &hitSpam, query, req.Comment, ngword.Word); err != nil {
+	// 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get hitspam: "+err.Error())
+	// 	}
+	// 	c.Logger().Infof("[hitSpam=%d] comment = %s", hitSpam, req.Comment)
+	// 	if hitSpam >= 1 {
+	// 		return echo.NewHTTPError(http.StatusBadRequest, "このコメントがスパム判定されました")
+	// 	}
+	// }
+	ngwordStrings := make([]string, len(ngwords))
+	for i, ngword := range ngwords {
+		ngwordStrings[i] = ngword.Word
+	}
+	if isSpam(req.Comment, ngwordStrings) {
+		return echo.NewHTTPError(http.StatusBadRequest, "このコメントがスパム判定されました")
 	}
 
 	now := time.Now().Unix()
@@ -556,6 +563,15 @@ func moderateHandler(c echo.Context) error {
 	return c.JSON(http.StatusCreated, map[string]interface{}{
 		"word_id": wordID,
 	})
+}
+
+func isSpam(comment string, ngwords []string) bool {
+	for _, ngword := range ngwords {
+		if strings.Contains(comment, ngword) {
+			return true
+		}
+	}
+	return false
 }
 
 // func fillLivecommentResponse(ctx context.Context, tx *sqlx.Tx, livecommentModel LivecommentModel) (Livecomment, error) {
