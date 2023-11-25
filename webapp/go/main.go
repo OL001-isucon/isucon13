@@ -112,6 +112,11 @@ func initializeHandler(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to initialize: "+err.Error())
 	}
 
+  if out, err := exec.Command("./purge_image.sh").CombinedOutput(); err != nil {
+		c.Logger().Warnf("purge_image.sh failed with err=%s", string(out))
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to initialize: "+err.Error())
+	}
+
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 	return c.JSON(http.StatusOK, InitializeResponse{
 		Language: "golang",
