@@ -1,0 +1,2 @@
+- name: Run initialize script
+  shell: bash /opt/aws-env-isucon-subdomain-address.sh
