@@ -19,7 +19,6 @@ import (
 
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
-	echolog "github.com/labstack/gommon/log"
 )
 
 const (
@@ -130,7 +129,7 @@ func initializeHandler(c echo.Context) error {
 func main() {
 	e := echo.New()
 	e.Debug = false
-	e.Logger.SetLevel(echolog.DEBUG)
+	// e.Logger.SetLevel(echolog.DEBUG)
 	// e.Use(middleware.Logger())
 	cookieStore := sessions.NewCookieStore(secret)
 	cookieStore.Options.Domain = "*.u.isucon.dev"
