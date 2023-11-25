@@ -10,15 +10,6 @@
     PATH: /home/isucon/local/golang/bin:{{ ansible_env.PATH }}
   make:
     chdir: /home/isucon/webapp/go
-    target: clean
-    params:
-      DEST: /home/isucon/webapp/go/isupipe
-
-- name: Build go
-  environment:
-    PATH: /home/isucon/local/golang/bin:{{ ansible_env.PATH }}
-  make:
-    chdir: /home/isucon/webapp/go
     target: build
     params:
       DEST: /home/isucon/webapp/go/isupipe
