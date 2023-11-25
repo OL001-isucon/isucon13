@@ -62,7 +62,8 @@ CREATE TABLE `ng_words` (
   `word` varchar(255) COLLATE utf8mb4_bin NOT NULL,
   `created_at` bigint NOT NULL,
   PRIMARY KEY (`id`),
-  KEY `ng_words_word` (`word`)
+  KEY `ng_words_word` (`word`),
+  KEY `idx_user_id_livestream_id` (`user_id`, `livestream_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=14338 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 CREATE TABLE `reactions` (
