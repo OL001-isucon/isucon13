@@ -548,7 +548,7 @@ func moderateHandler(c echo.Context) error {
     }
   }
 
-  query, args, err := sqlx.In("DELETE * FROM livecomments WHERE id IN (?);", forDeletedLivecommentsID)
+  query, args, err := sqlx.In("DELETE FROM livecomments WHERE id IN (?);", forDeletedLivecommentsID)
   if err != nil {
     return echo.NewHTTPError(http.StatusInternalServerError, "failed to generate sql by sqlx.In: "+err.Error())
   }
