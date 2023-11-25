@@ -70,7 +70,8 @@ CREATE TABLE `reactions` (
   `livestream_id` bigint NOT NULL,
   `emoji_name` varchar(255) COLLATE utf8mb4_bin NOT NULL,
   `created_at` bigint NOT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `lid_cat_desc` (`livestream_id`, `created_at` DESC)
 ) ENGINE=InnoDB AUTO_INCREMENT=1002 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 CREATE TABLE `reservation_slots` (
