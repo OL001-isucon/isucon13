@@ -158,7 +158,11 @@ func postIconHandler(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "failed to decode the request body as json")
 	}
 
-  userName := dbConn.GetContext(ctx, "SELECT name FROM users WHERE id=?", fmt.Sprintf("%v", userID))
+  var userName string
+  err := dbConn.GetContext(ctx, userName, "SELECT name FROM users WHERE id=?", fmt.Sprintf("%v", userID))
+  if err != nil {
+    return echo.NewHTTPError(http.StatusInternalServerError, "failed to get user name: "+err.Error())
+  }
 
   saveImage(req.Image, fmt.Sprintf("%v", userName))
 
