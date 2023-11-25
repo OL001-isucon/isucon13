@@ -266,10 +266,10 @@ func searchLivestreamsHandler(c echo.Context) error {
 	}
 
 	// tag
-	tagModels := []TagModel{}
+	tagModels := []TagWithLivestreamIDModel{}
 	tagModelsByLivestreamID := map[int64][]TagModel{}
 	if len(livestreamIDs) > 0 {
-		query := "SELECT tags.* FROM tags JOIN livestream_tags ON livestream_tags.tag_id = tags.id WHERE livestream_tags.livestream_id IN (?)"
+		query := "SELECT tags.id as `id`, tags.name as `name`, livestream_tags.livestream_id as `livestream_id` FROM tags JOIN livestream_tags ON livestream_tags.tag_id = tags.id WHERE livestream_tags.livestream_id IN (?)"
 		query, params, err := sqlx.In(query, livestreamIDs)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to generate sql by sqlx.In: "+err.Error())
@@ -278,7 +278,10 @@ func searchLivestreamsHandler(c echo.Context) error {
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to get tags: "+err.Error())
 		}
 		for _, tagModel := range tagModels {
-			tagModelsByLivestreamID[tagModel.ID] = append(tagModelsByLivestreamID[tagModel.ID], tagModel)
+			tagModelsByLivestreamID[tagModel.LivestreamID] = append(tagModelsByLivestreamID[tagModel.LivestreamID], TagModel{
+				ID:   tagModel.ID,
+				Name: tagModel.Name,
+			})
 		}
 	}
 
