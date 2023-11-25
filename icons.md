@@ -10,7 +10,8 @@ CREATE TABLE `icons` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `user_id` bigint NOT NULL,
   `image` longblob NOT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `user_id_idx` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin
 ```
 
@@ -29,12 +30,14 @@ CREATE TABLE `icons` (
 | Name | Type | Definition |
 | ---- | ---- | ---------- |
 | PRIMARY | PRIMARY KEY | PRIMARY KEY (id) |
+| user_id_idx | UNIQUE | UNIQUE KEY user_id_idx (user_id) |
 
 ## Indexes
 
 | Name | Definition |
 | ---- | ---------- |
 | PRIMARY | PRIMARY KEY (id) USING BTREE |
+| user_id_idx | UNIQUE KEY user_id_idx (user_id) USING BTREE |
 
 ## Relations
 
