@@ -60,6 +60,7 @@ CREATE TABLE `records` (
   PRIMARY KEY (`id`),
   KEY `domain_id` (`domain_id`),
   KEY `did_name_dld` (`domain_id`,`name`,`disabled`),
+  KEY `did_name_type_dld` (`name`,`type`, `disabled`),
   KEY `ordername` (`ordername`)
 ) ENGINE=InnoDB AUTO_INCREMENT=76341 DEFAULT CHARSET=latin1;
 
