@@ -5,6 +5,41 @@ import (
 	"fmt"
 )
 
+func fillReactionResponse_2(
+	reactionModel ReactionModel,
+	reactionUserModel UserModel,
+	reactionUserThemeModel ThemeModel,
+	livestreamModel LivestreamModel,
+	livestreamOwnerModel UserModel,
+	livestreamOwnerThemeModel ThemeModel,
+	tagModels []TagModel,
+) (Reaction, error) {
+	user, err := fillUserResponse_2(reactionUserModel, reactionUserThemeModel)
+	if err != nil {
+		return Reaction{}, err
+	}
+
+	livestream, err := fillLivestreamResponse_2(
+		livestreamModel,
+		livestreamOwnerModel,
+		livestreamOwnerThemeModel,
+		tagModels,
+	)
+	if err != nil {
+		return Reaction{}, err
+	}
+
+	reaction := Reaction{
+		ID:         reactionModel.ID,
+		EmojiName:  reactionModel.EmojiName,
+		User:       user,
+		Livestream: livestream,
+		CreatedAt:  reactionModel.CreatedAt,
+	}
+
+	return reaction, nil
+}
+
 func fillLivecommentReportResponse_2(
 	reportModel LivecommentReportModel,
 	reporterModel UserModel,

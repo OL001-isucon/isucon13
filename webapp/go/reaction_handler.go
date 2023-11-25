@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -67,9 +66,68 @@ func getReactionsHandler(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, "failed to get reactions")
 	}
 
+	reactionUserIDs := make([]int64, len(reactionModels))
+	reactionUserModels := make([]UserModel, len(reactionModels))
+	reactionUserModelsByUserID := make(map[int64]UserModel, len(reactionModels))
+	if len(reactionModels) > 0 {
+		for i := range reactionModels {
+			reactionUserIDs[i] = reactionModels[i].UserID
+		}
+		query, params, err := sqlx.In("SELECT * FROM users WHERE id IN (?)", reactionUserIDs)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to generate query: "+err.Error())
+		}
+		if err := tx.SelectContext(ctx, &reactionUserModels, query, params...); err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to get users: "+err.Error())
+		}
+		for i := range reactionUserModels {
+			reactionUserModelsByUserID[reactionUserModels[i].ID] = reactionUserModels[i]
+		}
+	}
+
+	reactionUserThemeModels := make([]ThemeModel, len(reactionUserModels))
+	reactionUserThemeModelsByUserID := make(map[int64]ThemeModel, len(reactionUserModels))
+	if len(reactionUserIDs) > 0 {
+		query, params, err := sqlx.In("SELECT * FROM themes WHERE user_id IN (?)", reactionUserIDs)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to generate query: "+err.Error())
+		}
+		if err := tx.SelectContext(ctx, &reactionUserThemeModels, query, params...); err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to get themes: "+err.Error())
+		}
+		for i := range reactionUserThemeModels {
+			reactionUserThemeModelsByUserID[reactionUserThemeModels[i].UserID] = reactionUserThemeModels[i]
+		}
+	}
+
+	livestreamModel := LivestreamModel{}
+	if err := tx.GetContext(ctx, &livestreamModel, "SELECT * FROM livestreams WHERE id = ?", livestreamID); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get livestream: "+err.Error())
+	}
+	livestreamOwnerModel := UserModel{}
+	if err := tx.GetContext(ctx, &livestreamOwnerModel, "SELECT * FROM users WHERE id = ?", livestreamModel.UserID); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get livestream owner: "+err.Error())
+	}
+	livestreamOwnerThemeModel := ThemeModel{}
+	if err := tx.GetContext(ctx, &livestreamOwnerThemeModel, "SELECT * FROM themes WHERE user_id = ?", livestreamModel.UserID); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get livestream owner theme: "+err.Error())
+	}
+	tagModels := []TagModel{}
+	if err := tx.SelectContext(ctx, &tagModels, "SELECT tags.* FROM tags JOIN livestream_tags ON livestream_tags.tag_id = tags.id WHERE livestream_tags.livestream_id = ?", livestreamModel.ID); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get tags: "+err.Error())
+	}
+
 	reactions := make([]Reaction, len(reactionModels))
 	for i := range reactionModels {
-		reaction, err := fillReactionResponse(ctx, tx, reactionModels[i])
+		reaction, err := fillReactionResponse_2(
+			reactionModels[i],
+			reactionUserModelsByUserID[reactionModels[i].UserID],
+			reactionUserThemeModelsByUserID[reactionModels[i].UserID],
+			livestreamModel,
+			livestreamOwnerModel,
+			livestreamOwnerThemeModel,
+			tagModels,
+		)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to fill reaction: "+err.Error())
 		}
@@ -130,7 +188,40 @@ func postReactionHandler(c echo.Context) error {
 	}
 	reactionModel.ID = reactionID
 
-	reaction, err := fillReactionResponse(ctx, tx, reactionModel)
+	reactionUserModel := UserModel{}
+	if err := tx.GetContext(ctx, &reactionUserModel, "SELECT * FROM users WHERE id = ?", reactionModel.UserID); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get user: "+err.Error())
+	}
+	reactionUserThemeModel := ThemeModel{}
+	if err := tx.GetContext(ctx, &reactionUserThemeModel, "SELECT * FROM themes WHERE user_id = ?", reactionModel.UserID); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get user theme: "+err.Error())
+	}
+	livestreamModel := LivestreamModel{}
+	if err := tx.GetContext(ctx, &livestreamModel, "SELECT * FROM livestreams WHERE id = ?", reactionModel.LivestreamID); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get livestream: "+err.Error())
+	}
+	livestreamOwnerModel := UserModel{}
+	if err := tx.GetContext(ctx, &livestreamOwnerModel, "SELECT * FROM users WHERE id = ?", livestreamModel.UserID); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get livestream owner: "+err.Error())
+	}
+	livestreamOwnerThemeModel := ThemeModel{}
+	if err := tx.GetContext(ctx, &livestreamOwnerThemeModel, "SELECT * FROM themes WHERE user_id = ?", livestreamModel.UserID); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get livestream owner theme: "+err.Error())
+	}
+	tagModels := []TagModel{}
+	if err := tx.SelectContext(ctx, &tagModels, "SELECT tags.* FROM tags JOIN livestream_tags ON livestream_tags.tag_id = tags.id WHERE livestream_tags.livestream_id = ?", livestreamModel.ID); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get tags: "+err.Error())
+	}
+
+	reaction, err := fillReactionResponse_2(
+		reactionModel,
+		reactionUserModel,
+		reactionUserThemeModel,
+		livestreamModel,
+		livestreamOwnerModel,
+		livestreamOwnerThemeModel,
+		tagModels,
+	)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to fill reaction: "+err.Error())
 	}
@@ -142,32 +233,50 @@ func postReactionHandler(c echo.Context) error {
 	return c.JSON(http.StatusCreated, reaction)
 }
 
-func fillReactionResponse(ctx context.Context, tx *sqlx.Tx, reactionModel ReactionModel) (Reaction, error) {
-	userModel := UserModel{}
-	if err := tx.GetContext(ctx, &userModel, "SELECT * FROM users WHERE id = ?", reactionModel.UserID); err != nil {
-		return Reaction{}, err
-	}
-	user, err := fillUserResponse(ctx, tx, userModel)
-	if err != nil {
-		return Reaction{}, err
-	}
+// func fillReactionResponse(ctx context.Context, tx *sqlx.Tx, reactionModel ReactionModel) (Reaction, error) {
+// 	userModel := UserModel{}
+// 	if err := tx.GetContext(ctx, &userModel, "SELECT * FROM users WHERE id = ?", reactionModel.UserID); err != nil {
+// 		return Reaction{}, err
+// 	}
+// 	user, err := fillUserResponse(ctx, tx, userModel)
+// 	if err != nil {
+// 		return Reaction{}, err
+// 	}
 
-	livestreamModel := LivestreamModel{}
-	if err := tx.GetContext(ctx, &livestreamModel, "SELECT * FROM livestreams WHERE id = ?", reactionModel.LivestreamID); err != nil {
-		return Reaction{}, err
-	}
-	livestream, err := fillLivestreamResponse(ctx, tx, livestreamModel)
-	if err != nil {
-		return Reaction{}, err
-	}
+// 	livestreamModel := LivestreamModel{}
+// 	if err := tx.GetContext(ctx, &livestreamModel, "SELECT * FROM livestreams WHERE id = ?", reactionModel.LivestreamID); err != nil {
+// 		return Reaction{}, err
+// 	}
+// 	livestreamOwnerModel := UserModel{}
+// 	if err := tx.GetContext(ctx, &livestreamOwnerModel, "SELECT * FROM users WHERE id = ?", livestreamModel.UserID); err != nil {
+// 		return Reaction{}, err
+// 	}
+// 	livestreamOwnerThemeModel := ThemeModel{}
+// 	if err := tx.GetContext(ctx, &livestreamOwnerThemeModel, "SELECT * FROM themes WHERE user_id = ?", livestreamModel.UserID); err != nil {
+// 		return Reaction{}, err
+// 	}
+// 	tagModels := []TagModel{}
+// 	if err := tx.SelectContext(ctx, &tagModels, "SELECT tags.* FROM tags JOIN livestream_tags ON livestream_tags.tag_id = tags.id WHERE livestream_tags.livestream_id = ?", livestreamModel.ID); err != nil {
+// 		return Reaction{}, err
+// 	}
 
-	reaction := Reaction{
-		ID:         reactionModel.ID,
-		EmojiName:  reactionModel.EmojiName,
-		User:       user,
-		Livestream: livestream,
-		CreatedAt:  reactionModel.CreatedAt,
-	}
+// 	livestream, err := fillLivestreamResponse_2(
+// 		livestreamModel,
+// 		livestreamOwnerModel,
+// 		livestreamOwnerThemeModel,
+// 		tagModels,
+// 	)
+// 	if err != nil {
+// 		return Reaction{}, err
+// 	}
 
-	return reaction, nil
-}
+// 	reaction := Reaction{
+// 		ID:         reactionModel.ID,
+// 		EmojiName:  reactionModel.EmojiName,
+// 		User:       user,
+// 		Livestream: livestream,
+// 		CreatedAt:  reactionModel.CreatedAt,
+// 	}
+
+// 	return reaction, nil
+// }
