@@ -2,13 +2,13 @@
 - name: Before benchmark
   hosts: all
   tasks:
-    # - name: Git Pull
-    #   import_tasks: ../roles/before_bench/git-pull.yml
-    # - name: Prepare golang
-    #   import_tasks: ../roles/before_bench/prepare.yml
-    # - name: Truncate Task
-    #   import_tasks: ../roles/before_bench/truncate.yml
-    #   become: true
+    - name: Git Pull
+      import_tasks: ../roles/before_bench/git-pull.yml
+    - name: Prepare golang
+      import_tasks: ../roles/before_bench/prepare.yml
+    - name: Truncate Task
+      import_tasks: ../roles/before_bench/truncate.yml
+      become: true
     - name: Nginx Task
       import_tasks: ../roles/before_bench/nginx.yml
       become: true
