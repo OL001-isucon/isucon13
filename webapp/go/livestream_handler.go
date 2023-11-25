@@ -222,9 +222,74 @@ func searchLivestreamsHandler(c echo.Context) error {
 		}
 	}
 
+	livestreamIDs := []int64{}
+	for _, livestreamModel := range livestreamModels {
+		livestreamIDs = append(livestreamIDs, livestreamModel.ID)
+	}
+
+	// owner
+	ownerUserIDs := []int64{}
+	ownerModels := []UserModel{}
+	ownerModelsByUserID := map[int64]UserModel{}
+	if len(livestreamModels) > 0 {
+		for _, livestreamModel := range livestreamModels {
+			ownerUserIDs = append(ownerUserIDs, livestreamModel.UserID)
+		}
+		query := "SELECT * FROM users WHERE id IN (?)"
+		query, params, err := sqlx.In(query, ownerUserIDs)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to generate sql by sqlx.In: "+err.Error())
+		}
+		if err := tx.SelectContext(ctx, &ownerModels, query, params...); err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to get themes: "+err.Error())
+		}
+		for _, ownerModel := range ownerModels {
+			ownerModelsByUserID[ownerModel.ID] = ownerModel
+		}
+	}
+
+	// theme
+	themeModels := []ThemeModel{}
+	themeModelsByUserID := map[int64]ThemeModel{}
+	if len(ownerUserIDs) > 0 {
+		query := "SELECT * FROM themes WHERE user_id IN (?)"
+		query, params, err := sqlx.In(query, ownerUserIDs)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to generate sql by sqlx.In: "+err.Error())
+		}
+		if err := tx.SelectContext(ctx, &themeModels, query, params...); err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to get themes: "+err.Error())
+		}
+		for _, themeModel := range themeModels {
+			themeModelsByUserID[themeModel.UserID] = themeModel
+		}
+	}
+
+	// tag
+	tagModels := []TagModel{}
+	tagModelsByLivestreamID := map[int64][]TagModel{}
+	if len(livestreamIDs) > 0 {
+		query := "SELECT tags.* FROM tags JOIN livestream_tags ON livestream_tags.tag_id = tags.id WHERE livestream_tags.livestream_id IN (?)"
+		query, params, err := sqlx.In(query, livestreamIDs)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to generate sql by sqlx.In: "+err.Error())
+		}
+		if err := tx.SelectContext(ctx, &tagModels, query, params...); err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to get tags: "+err.Error())
+		}
+		for _, tagModel := range tagModels {
+			tagModelsByLivestreamID[tagModel.ID] = append(tagModelsByLivestreamID[tagModel.ID], tagModel)
+		}
+	}
+
 	livestreams := make([]Livestream, len(livestreamModels))
-	for i := range livestreamModels {
-		livestream, err := fillLivestreamResponse(ctx, tx, *livestreamModels[i])
+	for i, livestreamModel := range livestreamModels {
+		livestream, err := fillLivestreamResponse_2(
+			*livestreamModel,
+			ownerModelsByUserID[livestreamModel.UserID],
+			tagModelsByLivestreamID[livestreamModel.ID],
+			themeModelsByUserID[livestreamModel.UserID],
+		)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to fill livestream: "+err.Error())
 		}
