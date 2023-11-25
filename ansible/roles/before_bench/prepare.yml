@@ -17,6 +17,6 @@
 - name: Restart go
   become: true
   service:
-    name: isupipe.go.service
+    name: isupipe-go.service
     state: restarted
     enabled: yes
