@@ -692,6 +692,7 @@ func getLivecommentReportsHandler(c echo.Context) error {
 	for _, reportModel := range reportModels {
 		reportLivecommentIDs = append(reportLivecommentIDs, reportModel.LivecommentID)
 	}
+	c.Logger().Infof("reportLivecommentIDs: %+v\n", reportLivecommentIDs)
 
 	// reporter
 	reporterModels := []UserModel{}
@@ -743,6 +744,7 @@ func getLivecommentReportsHandler(c echo.Context) error {
 			livecommentModelsByID[livecommentModel.ID] = livecommentModel
 		}
 	}
+	c.Logger().Infof("livecommentModelsByID: %+v\n", livecommentModelsByID)
 
 	// livecomment owner
 	livecommentOwnerUserIDs := []int64{}
