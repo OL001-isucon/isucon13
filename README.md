@@ -24,6 +24,44 @@ ossyNMMMNyMMhsssssssssssssshmmmhssssssso   GPU: 00:03.0 Amazon.com, Inc. Device 
             .-/+oossssoo+/-.
 ```
 
+## DB
+### 接続情報
+
+```
+host: 127.0.0.1
+port: 3306
+user: isucon
+password: isucon
+database: isupipe
+```
+
+```console
+$ mysql -h 127.0.0.1 -P 3306 -u isucon -p isupipe
+Enter password: isucon
+```
+
+### レコード数
+
+```sql
++---------------+--------------+----------------------------+------------+--------+---------+------------+------------+----------------+-------------+-----------------+--------------+-----------+----------------+---------------------+-------------+------------+-----------------+----------+----------------+---------------+
+| TABLE_CATALOG | TABLE_SCHEMA | TABLE_NAME                 | TABLE_TYPE | ENGINE | VERSION | ROW_FORMAT | TABLE_ROWS | AVG_ROW_LENGTH | DATA_LENGTH | MAX_DATA_LENGTH | INDEX_LENGTH | DATA_FREE | AUTO_INCREMENT | CREATE_TIME         | UPDATE_TIME | CHECK_TIME | TABLE_COLLATION | CHECKSUM | CREATE_OPTIONS | TABLE_COMMENT |
++---------------+--------------+----------------------------+------------+--------+---------+------------+------------+----------------+-------------+-----------------+--------------+-----------+----------------+---------------------+-------------+------------+-----------------+----------+----------------+---------------+
+| def           | isupipe      | icons                      | BASE TABLE | InnoDB |      10 | Dynamic    |          0 |              0 |       16384 |               0 |            0 |         0 |              1 | 2023-11-24 21:30:53 | NULL        | NULL       | utf8mb4_bin     |     NULL |                |               |
+| def           | isupipe      | livecomment_reports        | BASE TABLE | InnoDB |      10 | Dynamic    |          0 |              0 |       16384 |               0 |            0 |         0 |              1 | 2023-11-24 21:30:53 | NULL        | NULL       | utf8mb4_bin     |     NULL |                |               |
+| def           | isupipe      | livecomments               | BASE TABLE | InnoDB |      10 | Dynamic    |       1001 |            163 |      163840 |               0 |            0 |         0 |           1002 | 2023-11-24 21:30:53 | NULL        | NULL       | utf8mb4_bin     |     NULL |                |               |
+| def           | isupipe      | livestream_tags            | BASE TABLE | InnoDB |      10 | Dynamic    |      10640 |             50 |      540672 |               0 |            0 |         0 |          10967 | 2023-11-24 21:30:53 | NULL        | NULL       | utf8mb4_bin     |     NULL |                |               |
+| def           | isupipe      | livestream_viewers_history | BASE TABLE | InnoDB |      10 | Dynamic    |          0 |              0 |       16384 |               0 |            0 |         0 |              1 | 2023-11-24 21:30:53 | NULL        | NULL       | utf8mb4_bin     |     NULL |                |               |
+| def           | isupipe      | livestreams                | BASE TABLE | InnoDB |      10 | Dynamic    |       7179 |            367 |     2637824 |               0 |            0 |   4194304 |           7496 | 2023-11-24 21:30:53 | NULL        | NULL       | utf8mb4_bin     |     NULL |                |               |
+| def           | isupipe      | ng_words                   | BASE TABLE | InnoDB |      10 | Dynamic    |      14163 |            112 |     1589248 |               0 |      1589248 |   4194304 |          14338 | 2023-11-24 21:30:53 | NULL        | NULL       | utf8mb4_bin     |     NULL |                |               |
+| def           | isupipe      | reactions                  | BASE TABLE | InnoDB |      10 | Dynamic    |       1001 |             98 |       98304 |               0 |            0 |         0 |           1002 | 2023-11-24 21:30:53 | NULL        | NULL       | utf8mb4_bin     |     NULL |                |               |
+| def           | isupipe      | reservation_slots          | BASE TABLE | InnoDB |      10 | Dynamic    |       8593 |             59 |      507904 |               0 |            0 |         0 |           8760 | 2023-11-24 21:30:53 | NULL        | NULL       | utf8mb4_bin     |     NULL |                |               |
+| def           | isupipe      | tags                       | BASE TABLE | InnoDB |      10 | Dynamic    |        103 |            159 |       16384 |               0 |        16384 |         0 |            104 | 2023-11-24 21:30:53 | NULL        | NULL       | utf8mb4_bin     |     NULL |                |               |
+| def           | isupipe      | themes                     | BASE TABLE | InnoDB |      10 | Dynamic    |       1000 |             65 |       65536 |               0 |            0 |         0 |           1001 | 2023-11-24 21:30:53 | NULL        | NULL       | utf8mb4_bin     |     NULL |                |               |
+| def           | isupipe      | users                      | BASE TABLE | InnoDB |      10 | Dynamic    |       1005 |            407 |      409600 |               0 |        49152 |         0 |           1001 | 2023-11-24 21:30:53 | NULL        | NULL       | utf8mb4_bin     |     NULL |                |               |
++---------------+--------------+----------------------------+------------+--------+---------+------------+------------+----------------+-------------+-----------------+--------------+-----------+----------------+---------------------+-------------+------------+-----------------+----------+----------------+---------------+
+12 rows in set (0.02 sec)
+```
+
 ## 初期スコア
 初期スコア Total Score	4,198
 
