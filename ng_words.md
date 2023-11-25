@@ -13,7 +13,8 @@ CREATE TABLE `ng_words` (
   `word` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
   `created_at` bigint NOT NULL,
   PRIMARY KEY (`id`),
-  KEY `ng_words_word` (`word`)
+  KEY `ng_words_word` (`word`),
+  KEY `idx_user_id_livestream_id` (`user_id`,`livestream_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=[Redacted by tbls] DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin
 ```
 
@@ -39,6 +40,7 @@ CREATE TABLE `ng_words` (
 
 | Name | Definition |
 | ---- | ---------- |
+| idx_user_id_livestream_id | KEY idx_user_id_livestream_id (user_id, livestream_id) USING BTREE |
 | ng_words_word | KEY ng_words_word (word) USING BTREE |
 | PRIMARY | PRIMARY KEY (id) USING BTREE |
 
