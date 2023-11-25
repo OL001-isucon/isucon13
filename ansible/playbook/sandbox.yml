@@ -1,0 +1,6 @@
+---
+- name: Sandbox
+  hosts: all
+  tasks:
+    - name: echo 'Hello world'
+      shell: echo 'Hello world'

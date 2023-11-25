@@ -1,0 +1,32 @@
+name: Run benchmark
+
+on:
+  workflow_dispatch:
+    inputs:
+      host:
+        type: choice
+        required: true
+        options:
+          - isucon-1
+          - isucon-2
+          - isucon-3
+
+jobs:
+  run-bench:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/ssh_keyscan
+        with:
+          private_key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Run playbook
+        uses: dawidd6/action-ansible-playbook@v2
+        with:
+          playbook: ./ansible/playbook/run_bench.yml
+          options: |
+            --private-key ~/.ssh/id_ed25519
+            --inventory ./ansible/hosts.yml
+            --private-key ~/.ssh/id_ed25519
+            --limit "${{ github.event.inputs.host }}"
+            --verbose

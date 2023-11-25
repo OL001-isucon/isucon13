@@ -1,0 +1,5 @@
+---
+- name: Copy alp config.yml
+  copy:
+    src: ../../etc/alp/config.yml
+    dest: /etc/alp/config.yml

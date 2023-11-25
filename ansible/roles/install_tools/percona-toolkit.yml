@@ -1,0 +1,11 @@
+---
+- name: Install percona-toolkit
+  apt:
+    name: percona-toolkit
+    state: latest
+
+- name: Copy pt-query-digest.sh
+  copy:
+    src: ../../shell/pt-query-digest.sh
+    dest: /home/isucon/pt-query-digest.sh
+    mode: 0755

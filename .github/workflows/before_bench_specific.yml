@@ -1,0 +1,40 @@
+name: Run before_bench specific
+
+on:
+  workflow_dispatch:
+    inputs:
+      env:
+        type: choice
+        required: true
+        options:
+          - dev
+          - prod
+      host:
+        type: choice
+        required: true
+        options:
+          - isucon-1
+          - isucon-2
+          - isucon-3
+
+jobs:
+  before-bench:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/ssh_keyscan
+        with:
+          private_key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Run playbook
+        uses: dawidd6/action-ansible-playbook@v2
+        with:
+          playbook: ./ansible/playbook/before_bench.yml
+          options: |
+            --private-key ~/.ssh/id_ed25519
+            --inventory ./ansible/hosts.yml
+            --limit "${{ github.event.inputs.host }}"
+            --private-key ~/.ssh/id_ed25519
+            --extra-vars "env=${{ github.event.inputs.env }}"
+            --extra-vars "branch=${{ github.ref_name }}"
+            --verbose

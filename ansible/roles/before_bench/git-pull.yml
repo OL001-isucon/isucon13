@@ -1,0 +1,7 @@
+- name: Pull From Git
+  git:
+    repo: git@github.com:OL001-isucon/isucon13.git
+    dest: /home/isucon
+    update: yes
+    version: "{{ branch }}"
+    force: yes

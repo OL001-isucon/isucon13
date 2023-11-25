@@ -1,0 +1,32 @@
+---
+- name: Copy nginx.conf
+  copy:
+    src: ../../etc/nginx/nginx.{{ env }}.conf
+    dest: /etc/nginx/nginx.conf
+    mode: 0644
+
+- name: Copy isucondition.conf
+  copy:
+    src: ../../etc/nginx/sites-enabled/isucondition.{{ env }}.conf
+    dest: /etc/nginx/sites-enabled/isucondition.conf
+    mode: 0644
+
+- name: Change file ownership /var/log/nginx/access.log
+  ansible.builtin.file:
+    path: /var/log/nginx/access.log
+    owner: www-data
+    group: adm
+    mode: 0640
+
+- name: Change file ownership /var/log/nginx/error.log
+  ansible.builtin.file:
+    path: /var/log/nginx/error.log
+    owner: www-data
+    group: adm
+    mode: 0640
+
+- name: Restart nginx
+  service:
+    name: nginx
+    state: restarted
+    enabled: yes

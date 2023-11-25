@@ -1,0 +1,18 @@
+---
+- name: Copy alp.sh
+  copy:
+    src: ../../shell/alp.sh
+    dest: /home/isucon/alp.sh
+    mode: 0755
+
+- name: Copy pt-query-digest.sh
+  copy:
+    src: ../../shell/pt-query-digest.sh
+    dest: /home/isucon/pt-query-digest.sh
+    mode: 0755
+
+- name: Copy result.sh
+  copy:
+    src: ../../shell/result.sh
+    dest: /home/isucon/result.sh
+    mode: 0755

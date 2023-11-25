@@ -1,0 +1,28 @@
+---
+- name: Before benchmark
+  hosts: all
+  tasks:
+    - name: Git Pull
+      import_tasks: ../roles/before_bench/git-pull.yml
+    - name: Prepare golang
+      import_tasks: ../roles/before_bench/prepare.yml
+    - name: Truncate Task
+      import_tasks: ../roles/before_bench/truncate.yml
+      become: true
+    - name: Nginx Task
+      import_tasks: ../roles/before_bench/nginx.yml
+      become: true
+    - name: Mysql Task
+      import_tasks: ../roles/before_bench/mysql.yml
+      become: true
+    - name: Redis Task
+      import_tasks: ../roles/before_bench/redis.yml
+      become: true
+    - name: Sysctl Task
+      import_tasks: ../roles/before_bench/sysctl.yml
+      become: true
+    - name: Systemd Task
+      import_tasks: ../roles/before_bench/systemd.yml
+      become: true
+    - name: Run migrate
+      import_tasks: ../roles/before_bench/sqldef.yml

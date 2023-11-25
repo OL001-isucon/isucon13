@@ -1,0 +1,8 @@
+---
+- name: After benchmark
+  hosts: all
+  tasks:
+    - name: Copy alp config
+      import_tasks: ../roles/after_bench/alp.yml
+      become: true
+    - import_tasks: ../roles/after_bench/result.yml

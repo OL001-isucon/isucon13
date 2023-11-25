@@ -1,0 +1,39 @@
+---
+- name: Download mysqldef tar.gz archive
+  get_url:
+    url: https://github.com/k0kubun/sqldef/releases/latest/download/mysqldef_linux_amd64.tar.gz
+    dest: /tmp/mysqldef.tar.gz
+    mode: 0644
+
+- name: Extract mysqldef tar.gz archive
+  unarchive:
+    src: /tmp/mysqldef.tar.gz
+    dest: /usr/local/bin
+    remote_src: true
+    mode: 0755
+
+- name: Download psqldef tar.gz archive
+  get_url:
+    url: https://github.com/k0kubun/sqldef/releases/latest/download/psqldef_linux_amd64.tar.gz
+    dest: /tmp/psqldef.tar.gz
+    mode: 0644
+
+- name: Extract psqldef tar.gz archive
+  unarchive:
+    src: /tmp/psqldef.tar.gz
+    dest: /usr/local/bin
+    remote_src: true
+    mode: 0755
+
+- name: Download sqlite3def tar.gz archive
+  get_url:
+    url: https://github.com/k0kubun/sqldef/releases/latest/download/sqlite3def_linux_amd64.tar.gz
+    dest: /tmp/sqlite3def.tar.gz
+    mode: 0644
+
+- name: Extract sqlite3def tar.gz archive
+  unarchive:
+    src: /tmp/sqlite3def.tar.gz
+    dest: /usr/local/bin
+    remote_src: true
+    mode: 0755

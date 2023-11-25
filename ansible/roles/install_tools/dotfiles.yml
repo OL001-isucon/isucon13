@@ -1,0 +1,10 @@
+---
+- name: Copy .vimrc
+  copy:
+    src: ../../etc/vim/.vimrc
+    dest: /home/isucon/.vimrc
+
+- name: Copy .gitconfig
+  copy:
+    src: ../../etc/git/.gitconfig
+    dest: /home/isucon/.gitconfig

@@ -1,0 +1,5 @@
+---
+- name: Install neofetch
+  apt:
+    name: neofetch
+    state: latest

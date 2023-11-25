@@ -1,0 +1,9 @@
+---
+- name: Copy result.sh
+  copy:
+    src: ../../shell/result.sh
+    dest: /home/isucon/result.sh
+    mode: 0755
+
+- name: Aggregate result && Report to github issue
+  shell: bash /home/isucon/result.sh

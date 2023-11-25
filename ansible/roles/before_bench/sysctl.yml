@@ -1,0 +1,12 @@
+---
+- name: Update net.core.somaxconn
+  sysctl:
+    name: net.core.somaxconn
+    value: 10000
+    reload: true
+
+- name: Update net.ipv4.ip_local_port_range
+  sysctl:
+    name: net.ipv4.ip_local_port_range
+    value: 10000 65535
+    reload: true

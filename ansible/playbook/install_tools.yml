@@ -1,0 +1,16 @@
+---
+- name: Install tools
+  hosts: all
+  become: true
+  tasks:
+    - import_tasks: ../roles/install_tools/ssh.yml
+    - import_tasks: ../roles/install_tools/alp.yml
+    - import_tasks: ../roles/install_tools/dotfiles.yml
+    - import_tasks: ../roles/install_tools/gh.yml
+    - import_tasks: ../roles/install_tools/percona-toolkit.yml
+    - import_tasks: ../roles/install_tools/script.yml
+    - import_tasks: ../roles/install_tools/sqldef.yml
+    - import_tasks: ../roles/install_tools/neofetch.yml
+    - import_tasks: ../roles/install_tools/dstat.yml
+    - import_tasks: ../roles/install_tools/tig.yml
+    - import_tasks: ../roles/install_tools/redis.yml

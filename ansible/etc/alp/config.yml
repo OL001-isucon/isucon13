@@ -1,0 +1,20 @@
+---
+reverse: true
+sort: sum
+matching_groups:
+  - ^/initialize$
+  - ^/api/auth$
+  - ^/api/signout$
+  - ^/api/user/me$
+  - ^/api/isu$
+  - ^/api/isu/[0-9a-f-]+$
+  - ^/api/isu/[0-9a-f-]+/icon$
+  - ^/api/isu/[0-9a-f-]+/graph$
+  - ^/api/condition/[0-9a-f-]+$
+  - ^/api/trend$
+  - ^/$
+  - ^/isu/[0-9a-f-]+$
+  - ^/isu/[0-9a-f-]+/condition$
+  - ^/isu/[0-9a-f-]+/graph$
+  - ^/register$
+output: count,method,uri,1xx,2xx,3xx,4xx,5xx,sum,avg,min,max

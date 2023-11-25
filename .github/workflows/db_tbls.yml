@@ -1,0 +1,42 @@
+name: Run db_tbls
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - schema.sql
+
+permissions:
+  contents: write
+
+jobs:
+  db-tbls:
+    if: ${{ github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    services:
+      mysql:
+        image: mysql:8
+        options: --health-cmd "mysqladmin ping -h localhost" --health-interval 20s --health-timeout 10s --health-retries 10
+        ports:
+          - 3306:3306
+        env:
+          MYSQL_DATABASE: isucon
+          MYSQL_ROOT_PASSWORD: isucon
+          MYSQL_ROOT_HOST: '%'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: k1low/setup-tbls@v1
+
+      - name: Run schema.sql
+        run: mysql --host="127.0.0.1" --port=3306 --user="root" --password="isucon" isucon < schema.sql
+
+      - name: Run tbls for generate database document
+        run: tbls doc --dsn "mysql://root:isucon@127.0.0.1:3306/isucon"
+
+      - name: Deploy dbdob
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dbdoc
+          publish_branch: dbdoc

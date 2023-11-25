@@ -1,0 +1,18 @@
+---
+- name: Create directory
+  file:
+    path: /etc/systemd/system/mysql.service.d
+    state: directory
+
+- name: Copy systemd mysql.service.d limits.conf
+  copy:
+    src: ../../etc/systemd/mysql.service.d/limits.conf
+    dest: /etc/systemd/system/mysql.service.d/limits.conf
+    mode: 0644
+
+- name: Restart mysql
+  systemd:
+    name: mysql.service
+    state: restarted
+    daemon_reload: yes
+    enabled: yes

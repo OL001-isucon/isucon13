@@ -1,0 +1,22 @@
+---
+- name: Prepare env
+  copy:
+    src: ../../../env.sh.{{ env }}
+    dest: /home/isucon/env.sh
+    mode: 0755
+
+- name: Clean && Build go
+  environment:
+    PATH: /home/isucon/local/go/bin:{{ ansible_env.PATH }}
+  make:
+    chdir: /home/isucon/webapp/go
+    target: all
+    params:
+      DEST: /home/isucon/webapp/go/isucondition
+
+- name: Restart go
+  become: true
+  service:
+    name: isucondition.go.service
+    state: restarted
+    enabled: yes

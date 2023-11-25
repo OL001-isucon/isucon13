@@ -1,0 +1,29 @@
+---
+- name: Download alp tar.gz archive
+  get_url:
+    url: https://github.com/tkuchiki/alp/releases/download/v1.0.21/alp_linux_amd64.tar.gz
+    dest: /tmp/alp.tar.gz
+    mode: 0644
+
+- name: Extract alp tar.gz archive
+  unarchive:
+    src: /tmp/alp.tar.gz
+    dest: /usr/local/bin
+    remote_src: true
+    mode: 0755
+
+- name: Create alp directory
+  file:
+    path: /etc/alp
+    state: directory
+
+- name: Copy config.yml
+  copy:
+    src: ../../etc/alp/config.yml
+    dest: /etc/alp/config.yml
+
+- name: Copy alp.sh
+  copy:
+    src: ../../shell/alp.sh
+    dest: /home/isucon/alp.sh
+    mode: 0755

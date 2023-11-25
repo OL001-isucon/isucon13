@@ -1,0 +1,5 @@
+---
+- name: Install tig
+  apt:
+    name: tig
+    state: latest

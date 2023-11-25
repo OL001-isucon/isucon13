@@ -1,0 +1,11 @@
+---
+- name: Install redis
+  apt:
+    name: redis
+    state: latest
+
+- name: Restart redis
+  service:
+    name: redis
+    state: restarted
+    enabled: yes

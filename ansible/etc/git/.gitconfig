@@ -1,0 +1,38 @@
+[core]
+quotepath = off
+ignorecase = false
+safecrlf = true
+autocrlf = false
+precomposeunicode = true
+
+[alias]
+st = status
+br = branch
+co = commit
+ch = checkout
+ad = add
+fix = commit --amend --no-edit
+
+[user]
+name = isucon
+email = isucon@example.com
+
+[fetch]
+prune = true
+
+[pull]
+rebase = false
+
+[diff]
+patience = true
+
+[color]
+ui = auto
+status = auto
+diff = auto
+branch = auto
+interactive = auto
+grep = auto
+
+[init]
+defaultBranch = main
