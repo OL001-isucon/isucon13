@@ -141,7 +141,7 @@ func getUserStatisticsHandler(c echo.Context) error {
 
   // 自分のランクを算出
 	var rank int64
-  query = "SELECT RANK() OVER(ORDER BY score) FROM user_stats WHERE user_id=?";
+  query = "SELECT `rank` FROM (SELECT user_id, RANK() OVER(ORDER BY score DESC) AS `rank` FROM user_stats) AS t WHERE user_id=?";
   if err := tx.GetContext(ctx, &rank, query, user.ID); err != nil && !errors.Is(err, sql.ErrNoRows) {
     return echo.NewHTTPError(http.StatusInternalServerError, "failed to get user rank: "+err.Error())
   }
