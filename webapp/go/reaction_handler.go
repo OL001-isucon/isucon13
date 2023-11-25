@@ -23,11 +23,11 @@ type ReactionModel struct {
 }
 
 type Reaction struct {
-	ID         int64      `json:"id"`
-	EmojiName  string     `json:"emoji_name"`
-	User       User       `json:"user"`
-	Livestream Livestream `json:"livestream"`
-	CreatedAt  int64      `json:"created_at"`
+	ID         int64      `json:"id" db:"id"`
+	EmojiName  string     `json:"emoji_name" db:"emoji_name"`
+	User       User       `json:"user" db:"u"`
+	Livestream Livestream `json:"livestream" db:"l"`
+	CreatedAt  int64      `json:"created_at" db:"created_at"`
 }
 
 type PostReactionRequest struct {
@@ -47,39 +47,72 @@ func getReactionsHandler(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "livestream_id in path must be integer")
 	}
 
-	tx, err := dbConn.BeginTxx(ctx, nil)
+  tx, err := dbConn.BeginTxx(ctx, nil)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to begin transaction: "+err.Error())
 	}
 	defer tx.Rollback()
 
-	query := "SELECT * FROM reactions WHERE livestream_id = ? ORDER BY created_at DESC"
-	if c.QueryParam("limit") != "" {
-		limit, err := strconv.Atoi(c.QueryParam("limit"))
-		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "limit query parameter must be integer")
-		}
-		query += fmt.Sprintf(" LIMIT %d", limit)
-	}
+  query := "SELECT r.id AS id, r.user_id AS user_id, r.livestream_id AS livestream_id, r.emoji_name AS emoji_name, r.created_at AS created_at, u.id AS u.id, u.name AS u.name, u.display_name AS u.display_name, u.password AS u.password, u.description AS u.description, l.id AS l.id, l.user_id AS l.user_id, l.title AS l.title, l.description AS l.description, l.playlist_url AS l.playlist_url, l.thumbnail_url AS l.thumbnail_url, l.start_at AS l.start_at, l.end_at AS l.end_at FROM reactions as r JOIN users as u ON u.id=r.user_id JOIN livestreams as l ON l.id=r.livestream_id WHERE livestream_id=? ORDER BY r.created_at DESC"
+  if c.QueryParam("limit") != "" {
+    limit, err := strconv.Atoi(c.QueryParam("limit"))
+    if err != nil {
+      return echo.NewHTTPError(http.StatusBadRequest, "limit query parameter must be integer")
+    }
+    query += fmt.Sprintf(" LIMIT %d", limit)
+  }
 
-	reactionModels := []ReactionModel{}
-	if err := tx.SelectContext(ctx, &reactionModels, query, livestreamID); err != nil {
+	reactions := []Reaction{}
+	if err := tx.SelectContext(ctx, &reactions, query, livestreamID); err != nil {
 		return echo.NewHTTPError(http.StatusNotFound, "failed to get reactions")
 	}
 
-	reactions := make([]Reaction, len(reactionModels))
-	for i := range reactionModels {
-		reaction, err := fillReactionResponse(ctx, tx, reactionModels[i])
-		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, "failed to fill reaction: "+err.Error())
-		}
+	// reactions := make([]Reaction, len(reactionModels))
 
-		reactions[i] = reaction
-	}
+	// userModel := []UserModel{}
+  // var userIdMap = make(map[int64]User)
+	// if err := tx.SelectContext(ctx, &userModel, "SELECT * FROM users"); err != nil {
+	// 	return echo.NewHTTPError(http.StatusInternalServerError, "failed to fill reaction: "+err.Error())
+	// }
+	// if err != nil {
+	// 	return echo.NewHTTPError(http.StatusInternalServerError, "failed to fill reaction: "+err.Error())
+	// }
 
-	if err := tx.Commit(); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to commit: "+err.Error())
-	}
+  // for _, user := range userModel {
+	//   user, err := fillUserResponse(ctx, tx, user)
+  //   if err != nil {
+  //     return echo.NewHTTPError(http.StatusInternalServerError, "failed to fill reaction: "+err.Error())
+  //   }
+  //   userIdMap[user.ID] = user
+  // }
+
+	// livestreamModel := []LivestreamModel{}
+  // var livestreamIdMap = make(map[int64]Livestream)
+	// if err := tx.SelectContext(ctx, &livestreamModel, "SELECT * FROM livestreams"); err != nil {
+	// 	return echo.NewHTTPError(http.StatusInternalServerError, "failed to fill reaction: "+err.Error())
+	// }
+  // for _, livestream := range livestreamModel {
+  //   livestream, err := fillLivestreamResponse(ctx, tx, livestream)
+  //   if err != nil {
+  //     return echo.NewHTTPError(http.StatusInternalServerError, "failed to fill reaction: "+err.Error())
+  //   }
+  //   livestreamIdMap[livestream.ID] = livestream
+  // }
+	// if err := tx.Commit(); err != nil {
+	// 	return echo.NewHTTPError(http.StatusInternalServerError, "failed to commit: "+err.Error())
+	// }
+
+	// for i, reactionModel := range reactionModels {
+  //   reaction := Reaction{
+  //     ID:         reactionModel.ID,
+  //     EmojiName:  reactionModel.EmojiName,
+  //     User:       userIdMap[reactionModel.UserID],
+  //     Livestream: livestreamIdMap[reactionModel.LivestreamID],
+  //     CreatedAt:  reactionModel.CreatedAt,
+  //   }
+
+	// 	reactions[i] = reaction
+	// }
 
 	return c.JSON(http.StatusOK, reactions)
 }
