@@ -1,4 +1,5 @@
 DROP TRIGGER IF EXISTS update_user_stats;
+DROP TRIGGER IF EXISTS update_user_stats_livecomments;
 
 DELIMITER //
 CREATE TRIGGER update_user_stats
@@ -18,8 +19,6 @@ BEGIN
 END;
 //
 DELIMITER ;
-
-DROP TRIGGER IF EXISTS update_user_stats_livecomments;
 
 DELIMITER //
 CREATE TRIGGER update_user_stats_livecomments
