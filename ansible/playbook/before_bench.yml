@@ -6,9 +6,6 @@
       import_tasks: ../roles/before_bench/git-pull.yml
     - name: Prepare golang
       import_tasks: ../roles/before_bench/prepare.yml
-    - name: Initialize env
-      import_tasks: ../roles/before_bench/initialize.yml
-      become: true
     - name: Truncate Task
       import_tasks: ../roles/before_bench/truncate.yml
       become: true
@@ -28,4 +25,7 @@
       become: true
     - name: Systemd Task
       import_tasks: ../roles/before_bench/systemd.yml
+      become: true
+    - name: Initialize pdns
+      import_tasks: ../roles/before_bench/initialize_pdns.yml
       become: true
