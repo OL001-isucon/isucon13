@@ -85,6 +85,15 @@ func getLivecommentsHandler(c echo.Context) error {
 	}
 	defer tx.Rollback()
 
+	livestreamModel := LivestreamModel{}
+	err = tx.GetContext(ctx, &livestreamModel, "SELECT * FROM livestreams WHERE id = ?", livestreamID)
+	if errors.Is(err, sql.ErrNoRows) {
+		return echo.NewHTTPError(http.StatusNotFound, "livestream not found")
+	}
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get livestream: "+err.Error())
+	}
+
 	query := "SELECT * FROM livecomments WHERE livestream_id = ? ORDER BY created_at DESC"
 	if c.QueryParam("limit") != "" {
 		limit, err := strconv.Atoi(c.QueryParam("limit"))
@@ -103,9 +112,59 @@ func getLivecommentsHandler(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get livecomments: "+err.Error())
 	}
 
+	// comment user
+	commentUserIDs := []int64{}
+	commentUserModels := []UserModel{}
+	commentUserModelsByCommentID := map[int64]UserModel{}
+	for _, livecommentModel := range livecommentModels {
+		commentUserIDs = append(commentUserIDs, livecommentModel.UserID)
+	}
+	if len(commentUserIDs) > 0 {
+		query = "SELECT * FROM users WHERE id IN (?)"
+		query, params, err := sqlx.In(query, commentUserIDs)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to generate sql by sqlx.In: "+err.Error())
+		}
+		if err := tx.SelectContext(ctx, &commentUserModels, query, params...); err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to get comment users: "+err.Error())
+		}
+		for _, commentUserModel := range commentUserModels {
+			commentUserModelsByCommentID[commentUserModel.ID] = commentUserModel
+		}
+	}
+
+	// theme
+	themeModels := []ThemeModel{}
+	themeModelsByUserID := map[int64]ThemeModel{}
+	if len(commentUserIDs) > 0 {
+		query = "SELECT * FROM themes WHERE user_id IN (?)"
+		query, params, err := sqlx.In(query, commentUserIDs)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to generate sql by sqlx.In: "+err.Error())
+		}
+		if err := tx.SelectContext(ctx, &themeModels, query, params...); err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to get themes: "+err.Error())
+		}
+		for _, themeModel := range themeModels {
+			themeModelsByUserID[themeModel.UserID] = themeModel
+		}
+	}
+
+	// tag
+	tagModels := []TagModel{}
+	if err := tx.SelectContext(ctx, &tagModels, "SELECT tags.* FROM tags JOIN livestream_tags ON livestream_tags.tag_id = tags.id WHERE livestream_tags.livestream_id = ?", livestreamModel.ID); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get tags: "+err.Error())
+	}
+
 	livecomments := make([]Livecomment, len(livecommentModels))
-	for i := range livecommentModels {
-		livecomment, err := fillLivecommentResponse(ctx, tx, livecommentModels[i])
+	for i, livecommentModel := range livecommentModels {
+		livecomment, err := fillLivecommentResponse_2(
+			commentUserModelsByCommentID[livecommentModel.UserID],
+			themeModelsByUserID[livecommentModel.UserID],
+			livestreamModel,
+			livecommentModel,
+			tagModels,
+		)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to fil livecomments: "+err.Error())
 		}
