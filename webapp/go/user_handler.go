@@ -104,18 +104,10 @@ func getIconHandler(c echo.Context) error {
 	// 	return echo.NewHTTPError(http.StatusInternalServerError, "failed to get user: "+err.Error())
 	// }
 
-	var image []byte
-
-	filename := fmt.Sprintf("../icon/%v.jpg", username)
-	_, err := os.Stat(filename)
-	if err != nil {
-    return c.File(fallbackImage)
-	}
-
-  image, err = os.ReadFile(filename)
-	if err != nil {
-		echo.NewHTTPError(http.StatusInternalServerError, "failed to get user icon: "+err.Error())
-	}
+  image, err := getImage(username)
+  if err != nil {
+    return echo.NewHTTPError(http.StatusInternalServerError, "failed to get user icon: "+err.Error())
+  }
 
 	// if err := dbConn.GetContext(ctx, &image, "SELECT image FROM users JOIN icons ON users.id=icons.user_id WHERE name=?", username); err != nil {
 	// 	if errors.Is(err, sql.ErrNoRows) {
@@ -126,6 +118,16 @@ func getIconHandler(c echo.Context) error {
 	// }
 
 	return c.Blob(http.StatusOK, "image/jpeg", image)
+}
+
+func getImage(userId string) ([]byte, error) {
+  filename := fmt.Sprintf("../icon/%v.jpg", userId)
+  _, err := os.Stat(filename)
+  if err != nil {
+    return os.ReadFile(fallbackImage)
+  }
+
+  return os.ReadFile(filename)
 }
 
 func saveImage(image []byte, userId string) error {
@@ -431,16 +433,21 @@ func fillUserResponse(ctx context.Context, tx *sqlx.Tx, userModel UserModel) (Us
 		return User{}, err
 	}
 
-	var image []byte
-	if err := tx.GetContext(ctx, &image, "SELECT image FROM icons WHERE user_id = ?", userModel.ID); err != nil {
-		if !errors.Is(err, sql.ErrNoRows) {
-			return User{}, err
-		}
-		image, err = os.ReadFile(fallbackImage)
-		if err != nil {
-			return User{}, err
-		}
-	}
+	// var image []byte
+  image, err := getImage(userModel.Name)
+  if err != nil {
+    return User{}, err
+  }
+
+	// if err := tx.GetContext(ctx, &image, "SELECT image FROM icons WHERE user_id = ?", userModel.ID); err != nil {
+	// 	if !errors.Is(err, sql.ErrNoRows) {
+	// 		return User{}, err
+	// 	}
+	// 	image, err = os.ReadFile(fallbackImage)
+	// 	if err != nil {
+	// 		return User{}, err
+	// 	}
+	// }
 	iconHash := sha256.Sum256(image)
 
 	user := User{
