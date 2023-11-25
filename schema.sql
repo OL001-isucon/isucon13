@@ -53,7 +53,8 @@ CREATE TABLE `livestreams` (
   `thumbnail_url` varchar(255) COLLATE utf8mb4_bin NOT NULL,
   `start_at` bigint NOT NULL,
   `end_at` bigint NOT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `idx_user_id` (`user_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=7496 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 CREATE TABLE `ng_words` (
