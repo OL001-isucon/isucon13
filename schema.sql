@@ -106,3 +106,12 @@ CREATE TABLE `users` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uniq_user_name` (`name`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1001 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+
+CREATE TABLE `user_stats` (
+  `user_id` bigint NOT NULL,
+  `reaction_count` bigint NOT NULL DEFAULT 0,
+  `tip_amount` bigint NOT NULL DEFAULT 0,
+  `score` bigint GENERATED ALWAYS AS (reaction_count + tip_amount) STORED,
+  PRIMARY KEY (`user_id`),
+  KEY `idx_score` (`score`)
+) ENGINE=InnoDB AUTO_INCREMENT=1001 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
