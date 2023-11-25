@@ -17,7 +17,6 @@ type UserStatsModel struct {
   Score int64 `db:"score"`
 }
 
-
 type LivestreamStatistics struct {
 	Rank           int64 `json:"rank"`
 	ViewersCount   int64 `json:"viewers_count"`
@@ -94,12 +93,6 @@ func getUserStatisticsHandler(c echo.Context) error {
 		}
 	}
 
-  var stats []*UserStatsModel
-  query := "SELECT * FROM user_stats ORDER BY score DESC"
-  if err := tx.SelectContext(ctx, &stats, query); err != nil {
-    return echo.NewHTTPError(http.StatusInternalServerError, "failed to get user stats: "+err.Error())
-  }
-
 	//// ランク算出
 	// var users []*UserModel
 	// if err := tx.SelectContext(ctx, &users, "SELECT * FROM users"); err != nil {
@@ -119,6 +112,22 @@ func getUserStatisticsHandler(c echo.Context) error {
 	// 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to count reactions: "+err.Error())
 	// 	}
 
+  // 自分のランクを算出
+  var rank int64
+  query := `WITH tt AS (
+    SELECT s.*, u.name
+    FROM user_stats s
+    JOIN users u ON s.user_id = u.id
+  ),
+  r AS (
+      SELECT user_id, RANK() OVER(ORDER BY score DESC, name DESC) AS ra
+      FROM tt
+  )
+  SELECT ra FROM r WHERE user_id=?;`
+  if err := tx.GetContext(ctx, &rank, query, user.ID); err != nil && !errors.Is(err, sql.ErrNoRows) {
+    return echo.NewHTTPError(http.StatusInternalServerError, "failed to get user rank: "+err.Error())
+  }
+
 	// 	var tips int64
   //   // ライブのコメントのうちスパチャした金額
 	// 	query = `
@@ -137,23 +146,6 @@ func getUserStatisticsHandler(c echo.Context) error {
 	// 		Score:    score,
 	// 	})
 	// }
-	// sort.Sort(ranking)
-
-  // 自分のランクを算出
-	var rank int64
-  query = `WITH tt AS (
-    SELECT s.*, u.name
-    FROM user_stats s
-    JOIN users u ON s.user_id = u.id
-  ),
-  r AS (
-      SELECT user_id, RANK() OVER(ORDER BY score DESC, name) AS ra
-      FROM tt
-  )
-  SELECT ra FROM r WHERE user_id=?;`
-  if err := tx.GetContext(ctx, &rank, query, user.ID); err != nil && !errors.Is(err, sql.ErrNoRows) {
-    return echo.NewHTTPError(http.StatusInternalServerError, "failed to get user rank: "+err.Error())
-  }
 
 	// // リアクション数
   // // 自分がしたリアクションの数

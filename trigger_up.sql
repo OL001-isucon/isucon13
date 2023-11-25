@@ -19,3 +19,14 @@ BEGIN
 END;
 //
 DELIMITER ;
+
+DELIMITER //
+CREATE TRIGGER update_user_insert
+AFTER INSERT ON users
+FOR EACH ROW
+BEGIN
+  INSERT INTO user_stats (user_id, reaction_count, tip_amount)
+  VALUES (NEW.id, 0, 0);
+END;
+//
+DELIMITER ;
