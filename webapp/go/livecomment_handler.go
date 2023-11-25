@@ -529,11 +529,6 @@ func moderateHandler(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get last inserted NG word id: "+err.Error())
 	}
 
-  var ngword NGWord
-  if err := tx.GetContext(ctx, &ngword, "SELECT * FROM ng_words WHERE id = ?", wordID); err != nil {
-    return echo.NewHTTPError(http.StatusInternalServerError, "failed to get NG word: "+err.Error())
-  }
-
   // ライブコメント一覧取得
   var livecomments []*LivecommentModel
   if err := tx.SelectContext(ctx, &livecomments, "SELECT * FROM livecomments WHERE livestream_id=?", livestreamID); err != nil {
@@ -543,7 +538,7 @@ func moderateHandler(c echo.Context) error {
   var forDeletedLivecommentsID []int64
 
   for _, livecomment := range livecomments {
-    if (strings.Contains(livecomment.Comment, ngword.Word)) {
+    if (strings.Contains(livecomment.Comment, req.NGWord)) {
       forDeletedLivecommentsID = append(forDeletedLivecommentsID, livecomment.ID)
     }
   }
