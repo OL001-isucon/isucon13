@@ -98,8 +98,8 @@ func connectDB(logger echo.Logger) (*sqlx.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-	db.SetMaxOpenConns(50)
-	db.SetMaxIdleConns(50 * 2)
+	db.SetMaxOpenConns(1000)
+	db.SetMaxIdleConns(1000)
 	db.SetConnMaxLifetime(5 * time.Minute)
 	db.SetConnMaxIdleTime(2 * time.Minute)
 

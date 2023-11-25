@@ -10,6 +10,13 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+type UserStatsModel struct {
+  UserID int64 `db:"user_id"`
+  ReactionCount int64 `db:"reaction_count"`
+  TipAmoount int64 `db:"tip_amount"`
+  Score int64 `db:"score"`
+}
+
 type LivestreamStatistics struct {
 	Rank           int64 `json:"rank"`
 	ViewersCount   int64 `json:"viewers_count"`
@@ -86,63 +93,79 @@ func getUserStatisticsHandler(c echo.Context) error {
 		}
 	}
 
-	// ランク算出
-	var users []*UserModel
-	if err := tx.SelectContext(ctx, &users, "SELECT * FROM users"); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get users: "+err.Error())
-	}
+	//// ランク算出
+	// var users []*UserModel
+	// if err := tx.SelectContext(ctx, &users, "SELECT * FROM users"); err != nil {
+	// 	return echo.NewHTTPError(http.StatusInternalServerError, "failed to get users: "+err.Error())
+	// }
 
-	var ranking UserRanking
-	for _, user := range users {
-		var reactions int64
-		query := `
-		SELECT COUNT(*) FROM users u
-		INNER JOIN livestreams l ON l.user_id = u.id
-		INNER JOIN reactions r ON r.livestream_id = l.id
-		WHERE u.id = ?`
-		if err := tx.GetContext(ctx, &reactions, query, user.ID); err != nil && !errors.Is(err, sql.ErrNoRows) {
-			return echo.NewHTTPError(http.StatusInternalServerError, "failed to count reactions: "+err.Error())
-		}
+	// var ranking UserRanking
+	// for _, user := range users {
+	// 	var reactions int64
+  //   // userがliveにつけたreactionの数
+	// 	query = `
+	// 	SELECT COUNT(*) FROM users u
+	// 	INNER JOIN livestreams l ON l.user_id = u.id
+	// 	INNER JOIN reactions r ON r.livestream_id = l.id
+	// 	WHERE u.id = ?`
+	// 	if err := tx.GetContext(ctx, &reactions, query, user.ID); err != nil && !errors.Is(err, sql.ErrNoRows) {
+	// 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to count reactions: "+err.Error())
+	// 	}
 
-		var tips int64
-		query = `
-		SELECT IFNULL(SUM(l2.tip), 0) FROM users u
-		INNER JOIN livestreams l ON l.user_id = u.id	
-		INNER JOIN livecomments l2 ON l2.livestream_id = l.id
-		WHERE u.id = ?`
-		if err := tx.GetContext(ctx, &tips, query, user.ID); err != nil && !errors.Is(err, sql.ErrNoRows) {
-			return echo.NewHTTPError(http.StatusInternalServerError, "failed to count tips: "+err.Error())
-		}
+  // 自分のランクを算出
+  var rank int64
+  query := `WITH tt AS (
+    SELECT s.*, u.name
+    FROM user_stats s
+    JOIN users u ON s.user_id = u.id
+  ),
+  r AS (
+      SELECT user_id, RANK() OVER(ORDER BY score DESC, name DESC) AS ra
+      FROM tt
+  )
+  SELECT ra FROM r WHERE user_id=?;`
+  if err := tx.GetContext(ctx, &rank, query, user.ID); err != nil && !errors.Is(err, sql.ErrNoRows) {
+    return echo.NewHTTPError(http.StatusInternalServerError, "failed to get user rank: "+err.Error())
+  }
 
-		score := reactions + tips
-		ranking = append(ranking, UserRankingEntry{
-			Username: user.Name,
-			Score:    score,
-		})
-	}
-	sort.Sort(ranking)
+	// 	var tips int64
+  //   // ライブのコメントのうちスパチャした金額
+	// 	query = `
+	// 	SELECT IFNULL(SUM(l2.tip), 0) FROM users u
+	// 	INNER JOIN livestreams l ON l.user_id = u.id
+	// 	INNER JOIN livecomments l2 ON l2.livestream_id = l.id
+	// 	WHERE u.id = ?`
+	// 	if err := tx.GetContext(ctx, &tips, query, user.ID); err != nil && !errors.Is(err, sql.ErrNoRows) {
+	// 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to count tips: "+err.Error())
+	// 	}
 
-	var rank int64 = 1
-	for i := len(ranking) - 1; i >= 0; i-- {
-		entry := ranking[i]
-		if entry.Username == username {
-			break
-		}
-		rank++
-	}
+  //   // ユーザーのスコアのランキング
+	// 	score := reactions + tips
+	// 	ranking = append(ranking, UserRankingEntry{
+	// 		Username: user.Name,
+	// 		Score:    score,
+	// 	})
+	// }
 
-	// リアクション数
-	var totalReactions int64
-	query := `SELECT COUNT(*) FROM users u 
-    INNER JOIN livestreams l ON l.user_id = u.id 
-    INNER JOIN reactions r ON r.livestream_id = l.id
-    WHERE u.name = ?
-	`
-	if err := tx.GetContext(ctx, &totalReactions, query, username); err != nil && !errors.Is(err, sql.ErrNoRows) {
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to count total reactions: "+err.Error())
-	}
+	// // リアクション数
+  // // 自分がしたリアクションの数
+	// var totalReactions int64
+	// query = `SELECT COUNT(*) FROM users u
+  //   INNER JOIN livestreams l ON l.user_id = u.id
+  //   INNER JOIN reactions r ON r.livestream_id = l.id
+  //   WHERE u.name = ?
+	// `
+	// if err := tx.GetContext(ctx, &totalReactions, query, username); err != nil && !errors.Is(err, sql.ErrNoRows) {
+	// 	return echo.NewHTTPError(http.StatusInternalServerError, "failed to count total reactions: "+err.Error())
+	// }
+  var totalReactions int64
+  query = "SELECT reaction_count FROM user_stats WHERE user_id=?";
+  if err := tx.GetContext(ctx, &totalReactions, query, user.ID); err != nil && !errors.Is(err, sql.ErrNoRows) {
+    return echo.NewHTTPError(http.StatusInternalServerError, "failed to get user reaction count: "+err.Error())
+  }
 
 	// ライブコメント数、チップ合計
+  // 自分がコメントされたライブのコメント数、チップ合計
 	var totalLivecomments int64
 	var totalTip int64
 	var livestreams []*LivestreamModel
@@ -163,6 +186,7 @@ func getUserStatisticsHandler(c echo.Context) error {
 	}
 
 	// 合計視聴者数
+  // 自分のライブの視聴者数
 	var viewersCount int64
 	for _, livestream := range livestreams {
 		var cnt int64
@@ -173,6 +197,7 @@ func getUserStatisticsHandler(c echo.Context) error {
 	}
 
 	// お気に入り絵文字
+  // 自分がしたリアクションの中で最も多い絵文字
 	var favoriteEmoji string
 	query = `
 	SELECT r.emoji_name
@@ -188,7 +213,7 @@ func getUserStatisticsHandler(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to find favorite emoji: "+err.Error())
 	}
 
-	stats := UserStatistics{
+	_stats := UserStatistics{
 		Rank:              rank,
 		ViewersCount:      viewersCount,
 		TotalReactions:    totalReactions,
@@ -196,7 +221,7 @@ func getUserStatisticsHandler(c echo.Context) error {
 		TotalTip:          totalTip,
 		FavoriteEmoji:     favoriteEmoji,
 	}
-	return c.JSON(http.StatusOK, stats)
+	return c.JSON(http.StatusOK, _stats)
 }
 
 func getLivestreamStatisticsHandler(c echo.Context) error {

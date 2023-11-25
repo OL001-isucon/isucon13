@@ -1,6 +1,9 @@
 ---
+- name: Migrate down from trigger
+  shell: mysql -u isucon --password="isucon" isupipe < trigger_down.sql
+
 - name: Migrate from sqldef
   shell: mysqldef -u isucon -p isucon isupipe < schema.sql
 
-- name: Migrate from trigger
-  shell: mysql -u isucon --password="isucon" isupipe < trigger.sql
+- name: Migrate up from trigger
+  shell: mysql -u isucon --password="isucon" isupipe < trigger_up.sql

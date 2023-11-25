@@ -22,7 +22,9 @@ CREATE TABLE `livecomments` (
   `comment` varchar(255) COLLATE utf8mb4_bin NOT NULL,
   `tip` bigint NOT NULL DEFAULT '0',
   `created_at` bigint NOT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `lstid_idx` (`livestream_id`),
+  KEY `idx_livestream_id_created_at_desc` (`livestream_id`, `created_at` DESC)
 ) ENGINE=InnoDB AUTO_INCREMENT=1002 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 CREATE TABLE `livestream_tags` (
@@ -61,7 +63,8 @@ CREATE TABLE `ng_words` (
   `word` varchar(255) COLLATE utf8mb4_bin NOT NULL,
   `created_at` bigint NOT NULL,
   PRIMARY KEY (`id`),
-  KEY `ng_words_word` (`word`)
+  KEY `ng_words_word` (`word`),
+  KEY `idx_user_id_livestream_id` (`user_id`, `livestream_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=14338 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 CREATE TABLE `reactions` (
@@ -104,4 +107,13 @@ CREATE TABLE `users` (
   `description` text COLLATE utf8mb4_bin NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uniq_user_name` (`name`)
+) ENGINE=InnoDB AUTO_INCREMENT=1001 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+
+CREATE TABLE `user_stats` (
+  `user_id` bigint NOT NULL,
+  `reaction_count` bigint NOT NULL DEFAULT 0,
+  `tip_amount` bigint NOT NULL DEFAULT 0,
+  `score` bigint GENERATED ALWAYS AS (reaction_count + tip_amount) STORED,
+  PRIMARY KEY (`user_id`),
+  KEY `idx_score` (`score`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1001 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
