@@ -1,3 +1,29 @@
+# isucon13
+## neofetch
+
+```console
+            .-/+oossssoo+/-.               isucon@ip-192-168-0-11
+        `:+ssssssssssssssssss+:`           ----------------------
+      -+ssssssssssssssssssyyssss+-         OS: Ubuntu 22.04.3 LTS x86_64
+    .ossssssssssssssssssdMMMNysssso.       Host: c5.large
+   /ssssssssssshdmmNNmmyNMMMMhssssss/      Kernel: 6.2.0-1016-aws
+  +ssssssssshmydMMMMMMMNddddyssssssss+     Uptime: 17 mins
+ /sssssssshNMMMyhhyyyyhmNMMMNhssssssss/    Packages: 820 (dpkg), 6 (snap)
+.ssssssssdMMMNhsssssssssshNMMMdssssssss.   Shell: bash 5.1.16
++sssshhhyNMMNyssssssssssssyNMMMysssssss+   Terminal: /dev/pts/1
+ossyNMMMNyMMhsssssssssssssshmmmhssssssso   CPU: Intel Xeon Platinum 8275CL (2) @ 3.599GHz
+ossyNMMMNyMMhsssssssssssssshmmmhssssssso   GPU: 00:03.0 Amazon.com, Inc. Device 1111
++sssshhhyNMMNyssssssssssssyNMMMysssssss+   Memory: 828MiB / 3695MiB
+.ssssssssdMMMNhsssssssssshNMMMdssssssss.
+ /sssssssshNMMMyhhyyyyhdNMMMNhssssssss/
+  +sssssssssdmydMMMMMMMMddddyssssssss+
+   /ssssssssssshdmNNNNmyNMMMMhssssss/
+    .ossssssssssssssssssdMMMNysssso.
+      -+sssssssssssssssssyyyssss+-
+        `:+ssssssssssssssssss+:`
+            .-/+oossssoo+/-.
+```
+
 ## 初期スコア
 初期スコア Total Score	4,198
 
