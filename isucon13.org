@@ -1,0 +1,545 @@
+#+STARTUP: content
+#+STARTUP: fold
+#+OPTIONS: toc:nil
+#+OPTIONS: ^:nil
+* SSH Keys
+:PROPERTIES:
+:ID:       E395A1C8-C035-4D02-9C80-48F80BF2AEE9
+:END:
+** priate key
+#+begin_example
+  -----BEGIN OPENSSH PRIVATE KEY-----
+  b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
+  QyNTUxOQAAACBii20xcuPt4s16gX3bt5Re6dE20wkCz7jhsHGsQUvjiQAAAKDuLll17i5Z
+  dQAAAAtzc2gtZWQyNTUxOQAAACBii20xcuPt4s16gX3bt5Re6dE20wkCz7jhsHGsQUvjiQ
+  AAAECWqzlGTlsgUiO4nveNfb9MzNXkXQDKfLZlyivG6GVRZ2KLbTFy4+3izXqBfdu3lF7p
+  0TbTCQLPuOGwcaxBS+OJAAAAGG9sMDAxLWlzdWNvbkBleGFtcGxlLmNvbQECAwQF
+  -----END OPENSSH PRIVATE KEY-----
+#+end_example
+** public key
+#+begin_example
+  ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGKLbTFy4+3izXqBfdu3lF7p0TbTCQLPuOGwcaxBS+OJ ol001-isucon@example.com
+#+end_example
+* isucon13 手順書
+:PROPERTIES:
+:header-args:sql: :engine mysql :dbhost 127.0.0.1 :dbport 3306 :dbuser isucon :dbpassword isucon :database isupipe
+:END:
+** DONE 事前準備
+CLOSED: [2023-11-25 Sat 09:29]
+*** DONE ssh private/public keyを生成しておく
+CLOSED: [2023-11-23 Thu 23:20]
+
+link: [[id:E395A1C8-C035-4D02-9C80-48F80BF2AEE9][SSH Keys]]
+*** DONE ssh keyをGitHubに登録する
+CLOSED: [2023-11-23 Thu 23:22]
+
+link: https://github.com/OL001-isucon/isucon13/settings/keys
+*** DONE isucon13用のansibleと.github/を用意しておく
+CLOSED: [2023-11-24 Fri 12:21]
+** DONE 直前準備
+CLOSED: [2023-11-25 Sat 10:10]
+*** DONE 昼飯を買っておく
+CLOSED: [2023-11-25 Sat 09:30]
+*** DONE 手元にスマホを用意しておく
+CLOSED: [2023-11-25 Sat 09:30]
+*** DONE PCを再起動する
+CLOSED: [2023-11-25 Sat 09:30]
+*** DONE ドキュメント読み合わせ
+** DONE SSH関連作業
+CLOSED: [2023-11-25 Sat 10:10]
+*** DONE localの~/.ssh/configの設定してslackで共有する
+CLOSED: [2023-11-25 Sat 10:10]
+
+link: [[id:9266F459-5C46-4F8C-8B1B-18477FE5F9DD][ssh isucon config]]
+*** DONE isucon-1 に ~/.ssh/id_ed25519(.pub) を用意する
+CLOSED: [2023-11-25 Sat 10:10]
+
+link: [[id:E395A1C8-C035-4D02-9C80-48F80BF2AEE9][SSH Keys]]
+
+#+begin_src shell
+  vim ~/.ssh/id_ed25519
+  vim ~/.ssh/id_ed25519.pub
+  chmod 600 ~/.ssh/id_ed25519
+  chmod 600 ~/.ssh/id_ed25519.pub
+#+end_src
+** DONE レポジトリ初期準備
+CLOSED: [2023-11-25 Sat 10:15]
+*** DONE .gitconfigを用意する
+CLOSED: [2023-11-25 Sat 10:11]
+#+begin_src conf
+  [core]
+  quotepath = off
+  ignorecase = false
+  safecrlf = true
+  autocrlf = false
+  precomposeunicode = true
+
+  [alias]
+  st = status
+  br = branch
+  co = commit
+  ch = checkout
+  ad = add
+  fix = commit --amend --no-edit
+
+  [user]
+  name = isucon
+  email = isucon@example.com
+
+  [fetch]
+  prune = true
+
+  [pull]
+  rebase = false
+
+  [diff]
+  patience = true
+
+  [color]
+  ui = auto
+  status = auto
+  diff = auto
+  branch = auto
+  interactive = auto
+  grep = auto
+
+  [init]
+  defaultBranch = main
+#+end_src
+*** DONE isucon-1内でgit initして必要なソースコードをgithubに上げる
+CLOSED: [2023-11-25 Sat 10:12]
+*** DONE 手元にgit cloneをする
+CLOSED: [2023-11-25 Sat 10:13]
+#+begin_src shell
+  ghq get git@github.com:OL001-isucon/isucon13.git
+#+end_src
+*** DONE .editorconfigを用意する
+CLOSED: [2023-11-25 Sat 10:13]
+#+begin_src conf
+  [*]
+  charset = utf-8
+  end_of_line = lf
+  insert_final_newline = true
+  trim_trailing_whitespace = true
+  indent_style = space
+  indent_size = 2
+
+  [*.conf]
+  indent_size = 4
+  indent_style = space
+
+  [.go]
+  indent_size = 2
+  indent_style = tab
+
+  [{Makefile, *.mk}]
+  indent_style = tab
+  indent_size = 4
+#+end_src
+*** DONE 既にあるisucon素振りで作った ansible/ と .github/ をcopyする
+CLOSED: [2023-11-25 Sat 10:14]
+*** DONE project名を一括置換する
+CLOSED: [2023-11-25 Sat 10:15]
+
+#+begin_src shell
+  find ansible/ -type f | xargs sed -i "" -e "s/isucondition/isupipe/g"
+#+end_src
+
+** DONE Ansible初期作業
+CLOSED: [2023-11-25 Sat 10:22]
+*** DONE hosts.ymlを修正する
+CLOSED: [2023-11-25 Sat 10:16]
+*** DONE .github/actions/ssh_keyscan/action.ymlのip addressを修正する
+CLOSED: [2023-11-25 Sat 10:16]
+*** DONE ansible内のssh keyを差し替える
+CLOSED: [2023-11-25 Sat 10:17]
+
+link: [[id:E395A1C8-C035-4D02-9C80-48F80BF2AEE9][SSH Keys]]
+
+*** DONE (isucon serverが3台でない場合) workflow_dispatchのinputsが正しいか確認する
+CLOSED: [2023-11-25 Sat 10:17]
+
+#+begin_src shell :dir ~/.ghq/github.com/OL001-isucon/isucon12-final :results output
+  grep -R "inputs:" .github
+#+end_src
+
+#+RESULTS:
+: .github/workflows/run_bench.yml:    inputs:
+: .github/workflows/before_bench_all.yml:    inputs:
+: .github/workflows/sandbox_specific.yml:    inputs:
+: .github/workflows/after_bench.yml:    inputs:
+: .github/workflows/before_bench_specific.yml:    inputs:
+
+*** DONE github actions上で .github/workflows/sandbox_all.yml が動くか確認する
+CLOSED: [2023-11-25 Sat 10:19]
+*** DONE github actions上で .github/workflows/install_tools.yml を動かす
+CLOSED: [2023-11-25 Sat 10:19]
+*** DONE isucon-2/isucon-3に入ってssh -T git@github.comを叩く
+CLOSED: [2023-11-25 Sat 10:22]
+** DONE インフラ作業(これ以降isucon-3で作業する)
+CLOSED: [2023-11-25 Sat 10:22]
+*** DONE 動作しているプロセスを確認しておおよその構成を理解する
+CLOSED: [2023-11-25 Sat 10:19]
+Server:
+
+#+begin_src bash
+  sudo systemctl list-unit-files --type=service | grep -E "nginx|apache"
+#+end_src
+
+#+RESULTS:
+: nginx.service                          enabled         enabled
+
+DB:
+
+#+begin_src bash
+  sudo systemctl list-unit-files --type=service | grep -E "mysql|postgresql"
+#+end_src
+
+#+RESULTS:
+: mysql.service                          enabled         enabled
+
+Cache:
+
+#+begin_src bash
+  systemctl list-unit-files --type=service | grep -E "redis|memcached"
+#+end_src
+*** DONE ハードウェア構成を調べる
+CLOSED: [2023-11-25 Sat 10:22]
+#+begin_src bash
+  neofetch
+#+end_src
+** DONE DB初期作業(これ以降はNginx+MySQL構成の場合のみ対応する)
+CLOSED: [2023-11-25 Sat 10:28]
+*** DONE 接続情報をREADME.mdに書く
+CLOSED: [2023-11-25 Sat 10:23]
+
+こんな感じで書く
+
+#+begin_src markdown
+  ## DB
+  ### 接続情報
+
+  ```
+  host: 127.0.0.1
+  port: 3306
+  user: isucon
+  password: isucon
+  database: isucon
+  ```
+#+end_src
+
+*** DONE レコード数をREADME.mdに書く
+CLOSED: [2023-11-25 Sat 10:25]
+
+#+begin_src sql
+  SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'isupipe';
+#+end_src
+
+#+begin_src markdown
+  ### レコード数
+
+  ```sql
+  <結果を貼る>
+  ```
+#+end_src
+
+*** DONE sqldefでschema.sqlを生成してgithubに上げる
+CLOSED: [2023-11-25 Sat 10:27]
+例:
+
+#+begin_src console
+  mysqldef -u isucon -p isucon isupipe --export > schema.sql
+#+end_src
+
+*** DONE before_benchのsqldefの接続情報を修正する
+CLOSED: [2023-11-25 Sat 10:28]
+*** DONE trigger.sqlを空で作成する
+CLOSED: [2023-11-25 Sat 10:28]
+#+begin_src shell
+  touch trigger.sql
+#+end_src
+** DONE Nginx初期作業
+CLOSED: [2023-11-25 Sat 10:31]
+*** DONE nginx.confとsites-enabled/*の初期値をgit commitする
+CLOSED: [2023-11-25 Sat 10:31]
+
+=nginx.conf= は =nginx.dev.conf= に、 =sites-enabled/*.conf= は =sites-enabled/*.dev.conf= に変換する。
+
+*** DONE nginx.dev.confのlog_formatを修正する
+CLOSED: [2023-11-25 Sat 10:31]
+*** DONE sites-enabled/*.dev.conf を sites-enabled/*.prod.conf にcopyする
+CLOSED: [2023-11-25 Sat 10:31]
+*** DONE before_benchのnginxの設定を修正する
+CLOSED: [2023-11-25 Sat 10:31]
+** DONE Go初期作業
+CLOSED: [2023-11-25 Sat 10:33]
+*** DONE envをenv.devとenv.prodを用意する
+CLOSED: [2023-11-25 Sat 10:32]
+*** DONE webapp/go/Makefile を作成する
+CLOSED: [2023-11-25 Sat 10:32]
+
+例:
+
+#+begin_src makefile
+  DEST=$(PWD)/<project-name>
+  COMPILER=go
+  GO_FILES=$(wildcard ./*.go ./**/*.go)
+
+  .PHONY: all
+  all: clean build ## Cleanup and Build
+
+  .PHONY: build
+  build: $(GO_FILES) ## Build executable files
+          go mod tidy
+          @$(COMPILER) build -o $(DEST) -ldflags "-s -w"
+
+  .PHONY: clean
+  clean: ## Cleanup files
+          @$(RM) -r $(DEST)
+
+  .PHONY: help
+  help: ## Show help
+          @grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+#+end_src
+*** DONE before_benchのgo path修正
+CLOSED: [2023-11-25 Sat 10:33]
+** DONE before/after benchを実行
+CLOSED: [2023-11-25 Sat 12:45]
+*** DONE isucon-2/isucon-3に入ってgit pullできる状態にする
+CLOSED: [2023-11-25 Sat 10:33]
+#+begin_src shell
+  ssh -T git@github.com
+  git clone git@github.com:OL001-isucon/isucon13.git
+  mv isucon13/.git ./
+#+end_src
+*** DONE github actions上でisucon-3に .github/workflows/before_bench_specific.yml を実行
+CLOSED: [2023-11-25 Sat 10:48]
+*** DONE isucon-3でベンチマークを回す
+CLOSED: [2023-11-25 Sat 11:02]
+*** DONE github actions上で .github/workflows/after_bench.yml を実行
+CLOSED: [2023-11-25 Sat 12:40]
+** DONE ちょっとした修正をする
+CLOSED: [2023-11-25 Sat 12:30]
+*** DONE go-jsonライブラリの差し替え
+CLOSED: [2023-11-25 Sat 11:06]
+
+link: https://github.com/goccy/go-json#how-to-use
+*** DONE golangのconnection option設定
+CLOSED: [2023-11-25 Sat 12:30]
+#+begin_src go
+  db.SetMaxOpenConns(50)
+  db.SetMaxIdleConns(50*2)
+  db.SetConnMaxLifetime(5* time.Minute)
+  db.SetConnMaxIdleTime(2 * time.Minute)
+#+end_src
+** DONE local開発環境準備
+CLOSED: [2023-11-25 Sat 12:26]
+*** DONE docker-compose.ymlを用意して docker compose up する
+CLOSED: [2023-11-25 Sat 11:48]
+
+接続情報はよしなに変える。
+
+#+begin_src yaml
+  version: '3'
+  services:
+    db:
+      image: mysql:8.0
+      environment:
+        MYSQL_ROOT_PASSWORD: P@ssw0rd
+        MYSQL_USER: isucon
+        MYSQL_PASSWORD: isucon
+        MYSQL_DATABASE: <project-name>
+      ports:
+        - 33306:3306
+      security_opt:
+        - seccomp:unconfined
+      command: --default-authentication-plugin=mysql_native_password
+#+end_src
+*** DONE 本番DBからmysqldumpしてscpで持ってくる
+CLOSED: [2023-11-25 Sat 12:04]
+
+server:
+
+#+begin_src shell
+  mysqldump --user isucon --password="isucon" -t isucondition > dump.sql
+#+end_src
+
+local:
+
+#+begin_src shell
+  scp isucon@isucon-3:/home/isucon/dump.sql ./dump.sql
+  mysql --user isucon --password="isucon" <project-name> < ./dump.sql
+#+end_src
+
+*** DONE docker dbに流し込む
+CLOSED: [2023-11-25 Sat 12:04]
+#+begin_src sql
+  mysqldef -u isucon -p isucon <project-name> < schema.sql
+  mysql --host 127.0.0.1 --user isucon --password="isucon" <project-name> < ./dump.sql
+#+end_src
+*** DONE emacsからDBに疏通確認する
+CLOSED: [2023-11-25 Sat 12:04]
+#+begin_src sql
+  SELECT 1+1;
+#+end_src
+
+#+RESULTS:
+| 1+1 |
+|-----|
+|   2 |
+
+*** DONE goを起動する
+CLOSED: [2023-11-25 Sat 12:26]
+*** DONE 手順書をREADME.mdに纏める
+CLOSED: [2023-11-25 Sat 12:26]
+** DONE nginx.confのチューニング
+CLOSED: [2023-11-25 Sat 15:39]
+*** DONE 静的コンテンツをnginxから返す
+CLOSED: [2023-11-25 Sat 15:39]
+
+#+begin_src shell
+  curl --insecure --header 'Host: u.isucon.dev' https://localhost/api/tag
+
+  curl --insecure --header 'Host: u.isucon.dev' --header 'ContentType: image/jpeg'  --head https://localhost/api/user/zishikawa1/icon
+
+  /home/isucon/webapp/icon/zishikawa1.jpg
+#+end_src
+
+#+begin_src shell
+  ansible-playbook -i ./ansible/hosts.yml -l isucon-3 ./ansible/playbook/before_bench.yml --extra-vars "env=dev" --extra-vars "branch=feature/improve-nginx-conf" --verbose
+#+end_src
+#+begin_ai
+[ME]: 以下の
+
+    location / {
+        try_files $uri /index.html;
+    }
+
+    location /api {
+        proxy_set_header Host $host;
+        proxy_pass http://@app;
+    }
+
+    location ^/api/user/(?<username>\w+)/icon$ {
+        try_files /home/isucon/webapp/icon/$username.jpg @app;
+        expires 24h;
+        add_header Cache-Control public;
+        open_file_cache max=100;
+#+end_ai
+
+** DONE isucon-3をMySQL専用サーバとして使う
+CLOSED: [2023-11-25 Sat 14:02]
+
+link: https://isucon.net/archives/56082639.html
+
+*** DONE 権限付与
+CLOSED: [2023-11-25 Sat 13:59]
+#+begin_src sql
+  -- isucon-1
+  CREATE USER `isucon`@`192.168.0.11` IDENTIFIED BY 'isucon';
+  GRANT ALL PRIVILEGES ON *.* TO `isucon`@`192.168.0.11`;
+  GRANT FILE ON *.* TO `isucon`@`192.168.0.11`;
+
+  -- isucon-2
+  CREATE USER `isucon`@`192.168.0.12` IDENTIFIED BY 'isucon';
+  GRANT ALL PRIVILEGES ON *.* TO `isucon`@`192.168.0.12`;
+  GRANT FILE ON *.* TO `isucon`@`192.168.0.12`;
+
+  -- localhost
+  CREATE USER `isucon`@`127.0.0.1` IDENTIFIED BY 'isucon';
+  GRANT ALL PRIVILEGES ON *.* TO `isucon`@`127.0.0.1`;
+  GRANT FILE ON *.* TO `isucon`@`127.0.0.1`;
+
+  -- localhost
+  CREATE USER `isudns`@`127.0.0.1` IDENTIFIED BY 'isudns';
+  GRANT ALL PRIVILEGES ON *.* TO `isudns`@`127.0.0.1`;
+  GRANT FILE ON *.* TO `isudns`@`127.0.0.1`;
+#+end_src
+
+*** DONE isucon-1/isucon-2から疏通確認する
+CLOSED: [2023-11-25 Sat 14:02]
+** DONE production用の構成準備
+CLOSED: [2023-11-25 Sat 16:48]
+*** DONE nginx.prod.confの作成
+CLOSED: [2023-11-25 Sat 13:57]
+*** DONE env.prodの調整
+CLOSED: [2023-11-25 Sat 14:35]
+
+isucon-3にmysqlを繋げる
+
+*** DONE main.goのLog Middlewareを削除する
+CLOSED: [2023-11-25 Sat 14:35]
+** DONE その他タスク
+CLOSED: [2023-11-25 Sat 16:49]
+*** DONE trigger落ちる調査
+CLOSED: [2023-11-25 Sat 14:56]
+
+#+begin_ai
+[ME]: これは何のエラーですか？
+found syntax error when parsing DDL "CREATE TRIGGER update_user_stats_livecomments AFTER INSERT ON livecomments FOR EACH ROW BEGIN
+
+    UPDATE user_stats
+    SET tip_amount = tip_amount + NEW.tip
+    WHERE user_id = NEW.user_id;
+
+
+    IF ROW_COUNT() = 0 THEN
+        INSERT INTO user_stats (user_id, reaction_count, tip_amount)
+        VALUES (NEW.user_id, 0, NEW.tip);
+    END IF;
+END;
+
+CREATE TRIGGER update_user_stats AFTER INSERT ON reactions FOR EACH ROW BEGIN
+
+    UPDATE user_stats
+    SET reaction_count = reaction_count + 1
+    WHERE user_id = NEW.user_id;
+
+
+    IF ROW_COUNT() = 0 THEN
+        INSERT INTO user_stats (user_id, reaction_count, tip_amount)
+        VALUES (NEW.user_id, 1, 0);
+    END IF;
+END": syntax error at position 209 near 'if'
+
+
+
+[AI]: このエラーは、指定されたDDL文に文法エラーがあるため発生しています。具体的には、209番目の位置付近にある「if」キーワードが正しく解析されていないことを示しています。正しい文法を使用して再試行する必要があります。
+#+end_ai
+*** DONE nginxにgzip追加
+CLOSED: [2023-11-25 Sat 16:48]
+** DONE isucon-1とisucon-3で動かす
+CLOSED: [2023-11-25 Sat 17:36]
+*** DONE 手順を作る
+CLOSED: [2023-11-25 Sat 17:03]
+#+begin_src markdown
+  1. rebootする
+
+  $ ssh isucon-1 "sudo reboot"
+  $ ssh isucon-3 "sudo reboot"
+
+  2. ansible before_bench prodを流す
+
+  $ ansible-playbook -i ./ansible/hosts.yml -l isucon-1 ./ansible/playbook/before_bench.yml --extra-vars "env=prod" --extra-vars "branch=main" --verbose
+  $ ansible-playbook -i ./ansible/hosts.yml -l isucon-3 ./ansible/playbook/before_bench.yml --extra-vars "env=prod" --extra-vars "branch=main" --verbose
+
+  3. isucon-1に入って以下のような変更をする
+
+  env.shを以下のように変更する
+
+  diff --git a/env.sh.prod b/env.sh.prod
+  index 48772c1..1ee25eb 100755
+  --- a/env.sh
+  +++ b/env.sh
+  @@ -1,5 +1,5 @@
+   ISUCON13_MYSQL_DIALCONFIG_NET="tcp"
+  -ISUCON13_MYSQL_DIALCONFIG_ADDRESS="127.0.0.1"
+  +ISUCON13_MYSQL_DIALCONFIG_ADDRESS="192.168.0.13"
+   ISUCON13_MYSQL_DIALCONFIG_PORT="3306"
+   ISUCON13_MYSQL_DIALCONFIG_USER="isucon"
+   ISUCON13_MYSQL_DIALCONFIG_DATABASE="isupipe"```
+
+  4. isucon-1に対してbenchを回す
+#+end_src
+*** DONE 手順を行う
+CLOSED: [2023-11-25 Sat 17:36]
